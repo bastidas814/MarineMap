@@ -138,7 +138,7 @@ function OneSpeciesSelection({
 
   // Fetches nemesis description for all species from csv on component mount
   useEffect(() => {
-    fetch("/descriptions/nemesisSpeciesInfo.csv")
+    fetch("/descriptions/speciesSet.csv")
       .then((response) => response.text())
       .then((csvData) => {
         Papa.parse(csvData, {

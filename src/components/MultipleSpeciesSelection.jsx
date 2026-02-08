@@ -207,16 +207,16 @@ function MultipleSpeciesSelection({
 
   // Filter for the two selected species nemesis descriptions based on their IDs
   const selectedSpeciesAInfo = speciesData.find(
-    (species) => species["Species OBIS ID"] === selectedSpeciesA
+    (species) => species["Species OBIS/WoRMS ID"] === selectedSpeciesA
   );
   const selectedSpeciesBInfo = speciesData.find(
-    (species) => species["Species OBIS ID"] === selectedSpeciesB
+    (species) => species["Species OBIS/WoRMS ID"] === selectedSpeciesB
   );
 
   // Fetches nemesis description for all species from csv on component mount
   useEffect(() => {
     // Fetch the CSV file
-    fetch("/descriptions/nemesisSpeciesInfo.csv")
+    fetch("/descriptions/speciesSet.csv")
       .then((response) => response.text())
       .then((csvData) => {
         // Parse the CSV data
@@ -322,7 +322,7 @@ function MultipleSpeciesSelection({
               a["Species Name"].localeCompare(b["Species Name"])
               )
             .map((species, index) => (
-              <option key={index} value={species["Species OBIS ID"]}>
+              <option key={index} value={species["Species OBIS/WoRMS ID"]}>
                 {species["Species Name"]}
               </option>
             ))}
@@ -340,7 +340,7 @@ function MultipleSpeciesSelection({
               a["Species Name"].localeCompare(b["Species Name"])
               )
             .map((species, index) => (
-              <option key={index} value={species["Species OBIS ID"]}>
+              <option key={index} value={species["Species OBIS/WoRMS ID"]}>
                 {species["Species Name"]}
               </option>
             ))}

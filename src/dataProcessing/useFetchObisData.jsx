@@ -55,7 +55,7 @@ const getOBISSpeciesDesc = async (speciesDetail) => {
     // Find the matching species in the data
     for (const row of speciesSetData) {
       if (
-        row["Species OBIS/WoRMS ID"].toString() === speciesDetail["Species OBIS ID"].toString()
+        row["Species OBIS/WoRMS ID"].toString() === speciesDetail["Species OBIS/WoRMS ID"].toString()
       ) {
         return { speciesSet: row["Species Set Number"], id: row["Species OBIS/WoRMS ID"] };
       }
