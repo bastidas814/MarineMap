@@ -55,9 +55,9 @@ const getOBISSpeciesDesc = async (speciesDetail) => {
     // Find the matching species in the data
     for (const row of speciesSetData) {
       if (
-        row["Species OBIS ID"].toString() === speciesDetail["Species OBIS ID"].toString()
+        row["Species OBIS/WoRMS ID"].toString() === speciesDetail["Species OBIS ID"].toString()
       ) {
-        return { speciesSet: row["Species Set Number"], genus: row["Genus"], species: row["Species"] };
+        return { speciesSet: row["Species Set Number"], id: row["Species OBIS/WoRMS ID"] };
       }
     }
 
@@ -86,19 +86,14 @@ async function extractFromRegionsCSV(csvPath) {
   });
 }
 
-const filterBySpeciesName = (data, speciesName) => {
+const filterBySpeciesID = (data, speciesID) => {
   return data
-    ? data.filter((record) => record.scientificName === speciesName)
+    ? data.filter((record) => record.aphiaID === speciesID.toString())
     : [];
 };
 
 
 
-/**
- * Custom hook to fetch OBIS data for a given scientific name
- * @param {string} scientificName - The scientific name to search for
- * @returns {Object} - Contains data, loading, and error states
- */
 export default function useFetchObisData(speciesDetail, speciesDetailB) {
   const [combinedOBISData, setCombinedOBISData] = useState({});
   const [combinedOBISDataB, setCombinedOBISDataB] = useState({});
@@ -115,24 +110,22 @@ export default function useFetchObisData(speciesDetail, speciesDetailB) {
       // Determine which species set this species belongs to
       const speciesData = await getOBISSpeciesDesc(speciesDetail, abortControllerSignal);
 
-
       if (!speciesData) {
         throw new Error(`Species "${speciesDetail}" not found in species set data`);
       }
 
-      const { speciesSet, genus, species } = speciesData;
-      const scientificName = `${genus} ${species}`;
+      const { speciesSet, id } = speciesData;
 
       // Fetch all datasets in parallel
       const [NAET1Data, NAET2Data, NAET3Data] = await Promise.all([
         extractFromRegionsCSV(`/OBISFilteredData/NAET1/OBISNAET1Set${speciesSet}Data.csv`).then((data) =>
-          filterBySpeciesName(data, scientificName)
+          filterBySpeciesID(data, id)
         ),
         extractFromRegionsCSV(`/OBISFilteredData/NAET2/OBISNAET2Set${speciesSet}Data.csv`).then((data) =>
-          filterBySpeciesName(data, scientificName)
+          filterBySpeciesID(data, id)
         ),
         extractFromRegionsCSV(`/OBISFilteredData/NAET3/OBISNAET3Set${speciesSet}Data.csv`).then((data) =>
-          filterBySpeciesName(data, scientificName)
+          filterBySpeciesID(data, id)
         ),
       ]);
 
@@ -177,7 +170,6 @@ export default function useFetchObisData(speciesDetail, speciesDetailB) {
     return () => abortController.abort(); // Cleanup on unmount
   }, [speciesDetail]);
 
-  // Fetch data for speciesDetailB when it changes
   // fetch data for species B
   useEffect(() => {
     // Don't do anything if no scientificName is provided
@@ -265,7 +257,6 @@ export default function useFetchObisData(speciesDetail, speciesDetailB) {
     return { combinedYearRegionMap, combinedYearSiteMap };
   };
 
-  // const combinedOBISData = combinedOBISData;
   return {
     combinedOBISData,
     combinedOBISDataB,
