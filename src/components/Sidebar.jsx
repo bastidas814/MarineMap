@@ -3,7 +3,6 @@ import "../index.css";
 import OneSpeciesSelection from "./OneSpeciesSelection";
 import MultipleSpeciesSelection from "./MultipleSpeciesSelection";
 import { use } from "react";
-// import ObisApi from "./fetchObisData";
 
 function Sidebar({
   selectedSpeciesInfo,
@@ -15,11 +14,9 @@ function Sidebar({
   expandSide,
   setExpandSide,
   resetStates,
+  selectedTab,
+  setSelectedTab,
 }) {
-  const [selectedTab, setSelectedTab] = useState("oneSpecies");
-
-  console.log("selectedSpeciesInfo", selectedSpeciesInfo, selectedSpeciesBInfo);
-
   return (
     <div className="z-50 fixed w-fit h-full border-r-2 shadow-md border-primary flex flex-row bg-base-100">
       {/* Collapse sidebar with icons only */}
@@ -29,7 +26,7 @@ function Sidebar({
             selectedTab === "oneSpecies" ? "bg-base-200" : ""
           }`}
           onClick={() => {
-            if (selectedTab === "multipleSpecies") {
+            if (selectedTab != "oneSpecies") {
               setSelectedTab("oneSpecies");
               setExpandSide(true);
               onSpeciesSelect(null);
@@ -45,7 +42,7 @@ function Sidebar({
             selectedTab === "multipleSpecies" ? "bg-base-200" : ""
           }`}
           onClick={() => {
-            if (selectedTab == "oneSpecies") {
+            if (selectedTab != "multipleSpecies") {
               setSelectedTab("multipleSpecies");
               setExpandSide(true);
               onSpeciesSelect(null);
@@ -60,7 +57,7 @@ function Sidebar({
 
       {/* Expanded sidebar */}
       {expandSide && (
-        <div className="flex flex-col w-52 h-full">
+        <div className={`flex flex-col ${selectedTab == "multipleSpecies" ? "w-[384px]": "w-52"} h-full min-w`}>
           <div
             className="w-full p-2 flex justify-end align-bottom items-end">
             <span
@@ -70,27 +67,37 @@ function Sidebar({
                 onSpeciesSelect(null);
                 onSpeciesSelectB(null);
                 resetStates();
+                setSelectedTab("None");
               }}
             >
               ✕
             </span>
           </div>
+          <div className="pb-2">
+          {selectedTab === "oneSpecies" ? (
+              <p className="font-bold text-center">
+                Review One Species
+              </p>
+            ) : (
+              <p className="font-bold text-center">
+                Review Multiple Species
+              </p>
+            )
+          }
+          </div>
           <div className="flex-1 overflow-y-auto custom-scrollbar pb-20">
             <div className="">
               {selectedTab === "oneSpecies" ? (
                 <div>
-                  <p className="font-bold text-center">Review One Species</p>
                   <OneSpeciesSelection
                     selectedSpeciesRegionalInfo={selectedSpeciesInfo}
                     onSpeciesSelect={onSpeciesSelect}
                     showingSpeciesDetail={showingSpeciesDetail}
                     nemesisRegionNames={nemesisRegionNames}
                                     />
-                  {/* <ObisApi /> */}
                 </div>
               ) : (
                 <div>
-                  <p className="font-bold text-center">Review Multiple Species</p>
                   <MultipleSpeciesSelection
                   selectedSpeciesARegionalInfo={selectedSpeciesInfo}
                   selectedSpeciesBRegionalInfo={selectedSpeciesBInfo}

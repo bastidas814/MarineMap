@@ -44,12 +44,10 @@ function MultipleSpeciesSelection({
 
   // Functions to handle species selection
   const handleSpeciesAChange = (event) => {
-    console.log("Selected species A:", event.target.value);
     setSelectedSpeciesA(event.target.value);
   };
 
   const handleSpeciesBChange = (event) => {
-    console.log("Selected species B:", event.target.value);
     setSelectedSpeciesB(event.target.value);
   };
 
@@ -120,8 +118,7 @@ function MultipleSpeciesSelection({
     if (!selectedSpeciesARegionalInfo || !selectedSpeciesBRegionalInfo){
       return;
     }
-    console.log("selectedSpeciesARegionalInfo:", selectedSpeciesARegionalInfo);
-    console.log("selectedSpeciesBRegionalInfo:", selectedSpeciesBRegionalInfo);
+
     createBodyFromRegionalInfo(
       selectedSpeciesARegionalInfo,
       nemesisRegionNames,
@@ -195,8 +192,6 @@ function MultipleSpeciesSelection({
       // use callbacks to give selected species info to parent component
       onSpeciesSelect(selectedSpeciesAInfo);
       onSpeciesSelectB(selectedSpeciesBInfo);
-      console.log("Selected species A:", selectedSpeciesAInfo);
-      console.log("Selected species B:", selectedSpeciesBInfo);
 
       setIsSidebarVisible(true); // Show sidebar when a species is selected
       showingSpeciesDetail(true); // For communicating with timeline that species is selected
@@ -225,7 +220,6 @@ function MultipleSpeciesSelection({
           skipEmptyLines: true,
           complete: (results) => {
             setSpeciesData(results.data);
-            // console.log(results);
           },
         });
       })
@@ -241,6 +235,7 @@ function MultipleSpeciesSelection({
     if (!selectedSpeciesARegionalInfo || !selectedSpeciesBRegionalInfo) {
       return;
     }
+    
     let firstRecordsFormattedA = (
       <CollapsibleSection
         title={`First records for ${selectedSpeciesAInfo["Species Name"]}:`}
@@ -287,20 +282,42 @@ function MultipleSpeciesSelection({
 
     return (
       <>
+      <div className="flex gap-x-2 flex-row w-full border- border-blue-200">
+        <div className="border- flex flex-col w-1/2 p-2 border-primary">
         {/* Add more species details */}
-        {firstRecordsFormattedA}
-        {firstRecordsFormattedB}
-        {/* <CollapsibleSection title="Classification:" body="Classification" /> */}
-        <CollapsibleSection
-          title="More details:"
-          body={
-            <div>
-              <p>{moreDetailsFormattedA}</p>
-              <p>{moreDetailsFormattedB}</p>
-            </div>
-          }
-          bodyStyle="text-primary"
-        />
+          {firstRecordsFormattedA}
+        </div>
+        <div className="bg-primary w-0.5"></div>
+        <div className="flex flex-col w-1/2 p-2 border-">
+          {firstRecordsFormattedB}
+        </div>
+      </div>
+
+      <div className="flex gap-x-2 flex-row w-full border- border-blue-200">
+        <div className="border- flex flex-col w-1/2 p-2 border-primary">
+          <CollapsibleSection
+              title="More details:"
+              body={
+                <div>
+                  <p>{moreDetailsFormattedA}</p>
+                </div>
+              }
+              bodyStyle="text-primary"
+            />
+        </div>
+        <div className="bg-primary w-0.5"></div>
+        <div className="flex flex-col w-1/2 p-2 border-">
+          <CollapsibleSection
+              title="More details:"
+              body={
+                <div>
+                  <p>{moreDetailsFormattedB}</p>
+                </div>
+              }
+              bodyStyle="text-primary"
+            />
+        </div>
+      </div>        
       </>
     )
   });
@@ -309,46 +326,50 @@ function MultipleSpeciesSelection({
     <div>
       {!isSidebarVisible && (
         <div className="m-2 flex flex-col">
-          <div className="text-sm">Select species 1 (circle):</div>
-
-          <select
-            className="select focus:outline-none outline-none select-xs w-full select-secondary rounded-md text-xs"
-            onChange={handleSpeciesAChange}
-          >
-            <option disabled selected>
-              Select a species
-            </option>
-            {speciesData.sort((a,b) =>
-              a["Species Name"].localeCompare(b["Species Name"])
-              )
-            .map((species, index) => (
-              <option key={index} value={species["Species OBIS/WoRMS ID"]}>
-                {species["Species Name"]}
-              </option>
-            ))}
-          </select>
-
-          <div className="text-sm mt-4">Select species 2 (triangle):</div>
-          <select
-            className="select focus:outline-none outline-none select-xs w-full select-secondary rounded-md text-xs"
-            onChange={handleSpeciesBChange}
-          >
-            <option disabled selected>
-              Select a species
-            </option>
-            {speciesData.sort((a,b) =>
-              a["Species Name"].localeCompare(b["Species Name"])
-              )
-            .map((species, index) => (
-              <option key={index} value={species["Species OBIS/WoRMS ID"]}>
-                {species["Species Name"]}
-              </option>
-            ))}
-          </select>
+          <div className="flex gap-x-2">
+            <div className="flex flex-col w-1/2 p-2 border-">
+              <div className="text-sm">Select species 1 (circle):</div>
+              <select
+                className="select focus:outline-none outline-none select-xs w-full select-secondary rounded-md text-xs"
+                onChange={handleSpeciesAChange}
+              >
+                <option disabled selected>
+                  Select a species
+                </option>
+                {speciesData.sort((a,b) =>
+                  a["Species Name"].localeCompare(b["Species Name"])
+                  )
+                .map((species, index) => (
+                  <option key={index} value={species["Species OBIS/WoRMS ID"]}>
+                    {species["Species Name"]}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="flex flex-col w-1/2 p-2 border-">
+              <div className="text-sm">Select species 2 (triangle):</div>
+              <select
+                className="select focus:outline-none outline-none select-xs w-full select-secondary rounded-md text-xs"
+                onChange={handleSpeciesBChange}
+              >
+                <option disabled selected>
+                  Select a species
+                </option>
+                {speciesData.sort((a,b) =>
+                  a["Species Name"].localeCompare(b["Species Name"])
+                  )
+                .map((species, index) => (
+                  <option key={index} value={species["Species OBIS/WoRMS ID"]}>
+                    {species["Species Name"]}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
 
           <button
             onClick={handleButtonClick}
-            className="btn btn-sm m-4 items-center align-middle justify-center btn-secondary"
+            className="btn btn-sm m-4 mx-16 items-center align-middle justify-center btn-secondary"
           >
             Generate map
           </button>
@@ -374,6 +395,7 @@ function MultipleSpeciesSelection({
                 className="w-full h-auto"
               />
               <p className="text-sm mt-2">(circle)</p>
+
             </div>
             {/* <div className="items-center justify-center align-middle bg-slate-100">
               <hr className="h-32 border-l w-fit bg-red-600 border-primary"></hr>
@@ -394,10 +416,12 @@ function MultipleSpeciesSelection({
               <p className="text-sm mt-2">(triangle)</p>
             </div>
           </div>
-
-          {formattedCollapsible()}
+          
+          {/* <div className="flex gap-x-2 flex-row w-full border- border-blue-200"> */}
+            {formattedCollapsible()}
+          {/* </div> */}
           <button
-            className="mt-4 btn btn-sm btn-secondary"
+            className="mt-4 m-4 mx-16 btn btn-sm btn-secondary"
             onClick={() => {
               setIsSidebarVisible(false)
               showingSpeciesDetail(false);

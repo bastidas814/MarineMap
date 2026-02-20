@@ -11,6 +11,7 @@ export default function SpeciesSection() {
   const [selectedSpecies, setSelectedSpecies] = useState(null);
   const [selectedSpeciesInfo, setSelectedSpeciesInfo] = useState(null);
   const [expandSide, setExpandSide] = useState(true);
+  const [selectedTab, setSelectedTab] = useState("oneSpecies")
   const [speciesRegions, setSpeciesRegions] = useState([]);
   const [pastSpeciesRegions, setPastSpeciesRegions] = useState(new Set());
   const [pastSpeciesRegionsB, setPastSpeciesRegionsB] = useState(new Set());
@@ -696,6 +697,8 @@ export default function SpeciesSection() {
         nemesisRegionNames={nemesisRegionMap}
         expandSide={expandSide}
         setExpandSide={setExpandSide}
+        selectedTab={selectedTab}
+        setSelectedTab={setSelectedTab}
         resetStates={() => {
           setAllYearRegionDetail({});
           setAllYearRegionDetailB({});
@@ -729,6 +732,7 @@ export default function SpeciesSection() {
         currSitesB={currYearSiteDataB}
         nemesisRegionNames={nemesisRegionMap}
         expandSide={expandSide}
+        selectedTab={selectedTab}
       />
     </div>
   );

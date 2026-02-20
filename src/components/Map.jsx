@@ -12,6 +12,7 @@ function Map({
   currSites = {},
   currSitesB = {},
   expandSide = true,
+  selectedTab,
 }) {
   //TODO4 fix the popup for the first year region
 
@@ -23,7 +24,7 @@ function Map({
   const graphicsLayerRef = useRef(null);
   const plotCountRef = useRef(0);
   const [renderer, setRenderer] = useState(null);
-  const lastUpdated = "03/31/2025";
+  const lastUpdated = "02/01/2026";
 
   const [datasetsToShow, setDatasetToShow] = useState({
     nemesisBioregions: true,
@@ -579,9 +580,19 @@ function Map({
     );
   };
 
+  const left_width = () => {
+    if (!expandSide) {
+      return 'left-8';
+    }
+    if (selectedTab == "oneSpecies"){
+      return 'left-60';
+    }
+    return 'left-[414px]';
+  }
+
   return (
     <div className="h-full w-full bg-base-100 relative">
-      <div className={`absolute top-0 z-10 bg-none p-2 ${expandSide ? 'left-60' : 'left-8'}`}>
+      <div className={`absolute top-0 z-10 bg-none p-2 ${left_width()}`}>
         <MapSettings
           setDatasetToShow={setDatasetToShow}
           datasetsToShow={datasetsToShow}
@@ -589,7 +600,7 @@ function Map({
           basemap={basemap}
         />
       </div>
-      <div className={`absolute text-xs text-primary-content bottom-0 z-10 bg-none p-2 ${expandSide ? 'left-60' : 'left-8'}`}>
+      <div className={`absolute text-xs text-primary-content bottom-0 z-10 bg-none p-2 ${left_width()}`}>
         Data last modified: {lastUpdated}
       </div>
 

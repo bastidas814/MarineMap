@@ -16,6 +16,7 @@ function MapSection({
   showTimeline,
   nemesisRegionNames,
   expandSide,
+  selectedTab,
 }) {
 
   // turn set into list
@@ -33,6 +34,7 @@ function MapSection({
         currSites={currSites}
         currSitesB={currSitesB}
         expandSide={expandSide}
+        selectedTab={selectedTab}
       />
       {showTimeline && (
         <Timeline allowedYears={speciesYears} setNewYear={setNewYear} />
