@@ -11,7 +11,6 @@ function MapSection({
   currSites,
   currSitesB,
   speciesYears,
-  allYearRegionMap,
   setNewYear,
   showTimeline,
   nemesisRegionNames,

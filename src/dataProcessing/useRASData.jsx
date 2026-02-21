@@ -116,6 +116,7 @@ export default function useRASData(speciesDetail) {
           // add info columns
           const RASSiteInfo = filteredRASSite.map((data) => ({
               ...data,
+              RegionName: data.SiteLocation,
               Date: record.Year.trim(),
               "Source(s)": record.Source.trim()
             })

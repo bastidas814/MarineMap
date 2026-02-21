@@ -330,6 +330,20 @@ export default function SpeciesSection() {
     }
   }, [selectedSpecies, selectedSpeciesB]);
 
+  // helper to merge without race conditions
+  const mergeAllYearRegionDetails = (prev = {}, incoming = {}) => {
+    const out = { ...prev };
+    Object.entries(incoming).forEach(([year, regions]) => {
+      if (!out[year]) out[year] = {};
+      Object.entries(regions).forEach(([region, records]) => {
+        if (!out[year][region]) out[year][region] = [];
+        // append records (no strict dedupe attempted beyond reference)
+        out[year][region] = out[year][region].concat(records);
+      });
+    });
+    return out;
+  };
+
   // update region detail information with OBIS
   const addAllYrDetailOBIS = (speciesOBISData, allYearRegionDetailWithObis, regionYearMapWithObis) => {
     for (let year in speciesOBISData["combinedYearRegionMap"]) {
@@ -365,7 +379,7 @@ export default function SpeciesSection() {
     setAllYearRegionMapB((prevMap) => addAllYearRegionMap(prevMap, obisRegionMapB));
 
     // Updating all the variables with bioregions to now include OBIS data
-    const allYearRegionDetailWithObis = { ...allYearRegionDetail };
+    const allYearRegionDetailWithObis = { ...allYearRegionDetail};
     const regionYearMapWithObis = { ...regionYearMap };
 
     addAllYrDetailOBIS(combinedOBISData, allYearRegionDetailWithObis, regionYearMapWithObis);
@@ -373,7 +387,12 @@ export default function SpeciesSection() {
 
     setRegionYearMap(regionYearMapWithObis);
 
-    setAllYearRegionDetail(allYearRegionDetailWithObis);
+    setAllYearRegionDetail(
+      (prevData) =>
+      mergeAllYearRegionDetails(
+        prevData, allYearRegionDetailWithObis
+      )
+    );
   }, [combinedOBISData, combinedOBISDataB]);
 
   // Set nemesis region:name map
@@ -437,6 +456,7 @@ export default function SpeciesSection() {
       Array.from(new Set([...prevYears, ...years]))
         .sort((a, b) => Number(a) - Number(b))
     );
+    
     return { yearRegionMap, yearRegionDetails };
   }
 
@@ -450,6 +470,9 @@ export default function SpeciesSection() {
         const { yearRegionMap, yearRegionDetails } = addRASData(selectedSpecies);
 
         setAllYearRegionMap((prevMap) => addAllYearRegionMap(prevMap, yearRegionMap));
+        setAllYearRegionDetail(prevData =>
+          mergeAllYearRegionDetails(prevData, yearRegionDetails)
+        );
         setAllYearRasData(extractYearsWithGeoloc(yearRegionDetails))
       }
     }
@@ -458,6 +481,9 @@ export default function SpeciesSection() {
         const { yearRegionMap, yearRegionDetails } = addRASData(selectedSpeciesB);
 
         setAllYearRegionMapB((prevMap) => addAllYearRegionMap(prevMap, yearRegionMap));
+        setAllYearRegionDetailB(prevData =>
+          mergeAllYearRegionDetails(prevData, yearRegionDetails)
+        );
         setAllYearRasDataB(extractYearsWithGeoloc(yearRegionDetails))
       }
     }
@@ -544,7 +570,12 @@ export default function SpeciesSection() {
     if (selectedSpecies) {
       const { regionSpeciesData, yearRegionDetails, yearRegionMap, years } = addNemesisData(selectedSpecies);
       setSelectedSpeciesInfo(regionSpeciesData);
-      setAllYearRegionDetail(yearRegionDetails);
+      setAllYearRegionDetail(
+        (prevData) =>
+        mergeAllYearRegionDetails(
+          prevData, yearRegionDetails
+        )
+      );
 
       // Adding lat and long from source sites
       const tempAllYearNemesisSiteData = extractYearsWithGeoloc(yearRegionDetails);
@@ -561,7 +592,12 @@ export default function SpeciesSection() {
     if (selectedSpeciesB) {
       const { regionSpeciesData, yearRegionDetails, yearRegionMap, years } = addNemesisData(selectedSpeciesB);
       setSelectedSpeciesBInfo(regionSpeciesData);
-      setAllYearRegionDetailB(yearRegionDetails);
+      setAllYearRegionDetailB(
+        (prevData) => 
+        mergeAllYearRegionDetails(
+          prevData, yearRegionDetails
+        )
+      );
 
       // Adding lat and long from source sites
       const tempAllYearNemesisSiteData = extractYearsWithGeoloc(yearRegionDetails);
@@ -572,7 +608,9 @@ export default function SpeciesSection() {
           .sort((a, b) => Number(a) - Number(b))
       );
 
-      setAllYearRegionMapB((prevMap) => addAllYearRegionMap(prevMap, yearRegionMap));
+      setAllYearRegionMapB(
+        (prevMap) => addAllYearRegionMap(prevMap, yearRegionMap)
+      );
     }
   }, [selectedSpecies, selectedSpeciesB, NAET1Data, NAET2Data, NAET3Data]);
 
@@ -725,7 +763,6 @@ export default function SpeciesSection() {
         pastSpeciesRegionsB={pastSpeciesRegionsB}
         regionsDetail={currYearDetail}
         speciesYears={speciesYears}
-        allYearRegionMap={allYearRegionMap}
         setNewYear={setNewYear}
         showTimeline={showingSpeciesDetail}
         currSites={currYearSiteData}

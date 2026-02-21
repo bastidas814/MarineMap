@@ -74,7 +74,6 @@ function Map({
   // Create the popup template base on unique region details
   const createPopupTemplate = (PopupTemplate, regionsDetail) => {
     return new PopupTemplate({
-      // title: "",
       content: [
         {
           type: "text",
@@ -142,9 +141,7 @@ function Map({
                           : value
                               .map(
                                 ({ RegionName, ...rest }) =>
-                                  `${RegionName} (${rest["Source(s)"].substring(
-                                    1
-                                  )})`
+                                  `${RegionName} (${rest["Source(s)"].trim()})`
                               )
                               .join(", ")
                       }'`
@@ -417,7 +414,6 @@ function Map({
 
   const createSitePopupTemplate = (siteInfo) => {
     let content = `<p><strong>Record Date:</strong> ${siteInfo["Date"]}</p>`;
-
     if (siteInfo["Site Code"]) {
       content += `
       <p><strong>Site Name:</strong> ${siteInfo["Site Location"]}</p>
@@ -440,7 +436,7 @@ function Map({
         target="_blank"
         rel="noopener noreferrer"
         style="color: rgb(102,129,174);">
-        Link to Dataset
+        Link to OBIS Dataset
       </a></p>`;
     } else {
       content += `
