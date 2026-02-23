@@ -87,8 +87,6 @@ function Map({
             <div class="popup-body">
               <p>{expression/popupContent}</p>
             </div>
-
-
             </div>
           `,
         },
@@ -449,10 +447,7 @@ function Map({
       `;
     }
     return {
-      // title: `<p><strong>${name}</strong></p>`,
       content: content,
-
-      // content: `<p><strong>Site ID:</strong> {id}</p>`,
     };
 
    };
