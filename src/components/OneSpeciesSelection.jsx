@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import Papa from "papaparse";
 import { IoIosArrowDown } from "react-icons/io";
 import CollapsibleSection from "./CollapsibleSection";
+import { createBodyFromRegionalInfo, setLinks } from "./SidebarInfo"; 
 import { use } from "react";
 
 /**
@@ -34,61 +35,16 @@ function OneSpeciesSelection({
 
   // Update formatted regional info on sidebar when selected species info changes
   useEffect(() => {
-
     if (!selectedSpeciesRegionalInfo) {
       return;
     }
-    if (selectedSpeciesRegionalInfo[1]) {
-      let body = Object.entries(selectedSpeciesRegionalInfo[0]).map(
-        ([region, details]) => {
-          const { Year, Vectors, ...rest } = details;
-          return (
-            <div key={region} className="py-1">
-              <span className="font-bold">
-                {nemesisRegionNames[region]} ({Year}):
-              </span>
-              <br />
-              <span className="font-semibold"> Invasion Status: </span>{" "}
-              {rest["Invasion Status"]}
-              <br />
-              <span className="font-semibold"> Population Status: </span>{" "}
-              {rest["Population Status"]}
-              <br />
-              <span className="font-semibold"> Vectors: </span> {Vectors}
-            </div>
-          );
-        }
-      );
-      setSpeciesFormatedRegionalInfo(body);
-    } else {
-      let body = Object.entries(selectedSpeciesRegionalInfo[0]).map(
-        (row) => {
-          return (
-            <div className="py-1">
-              <span className="font-bold">
-                {row[1]['Region']}:
-              </span>
-              <br />
-              <span className="font-semibold"> Introduction Origin: </span>{" "}
-              {row[1]["Introduction Origin"] || "Unknown"}
-              <br />
-              <span className="font-semibold"> Invasiveness: </span>{" "}
-              {row[1]["Invasiveness"] || "Unknown"}
-              <br />
-              <span className="font-semibold"> Occurrence: </span>{" "}
-              {row[1]["Occurrence"] || "Unknown"}
-              <br />
-              <span className="font-semibold"> Quality: </span>{" "}
-              {row[1]["Quality"]}
-            </div>
-          );
-        }
-      );
-      if (Object.keys(selectedSpeciesRegionalInfo[0]).length === 0) {
-        body = "No data"
-      }
-      setSpeciesFormattedOcc(body);
-    }
+
+    createBodyFromRegionalInfo(
+      selectedSpeciesRegionalInfo,
+      nemesisRegionNames,
+      setSpeciesFormatedRegionalInfo,
+      setSpeciesFormattedOcc,
+    )
 
   }, [selectedSpeciesRegionalInfo]);
 
@@ -99,33 +55,14 @@ function OneSpeciesSelection({
    */
   const handleButtonClick = () => {
     if (selectedSpeciesInfo) {
-      // onSpeciesSelect(selectedSpecies); set to species name
-      setNemesisLink(
-        <a
-          href={
-            "https://invasions.si.edu/nemesis/species_summary/" +
-            selectedSpeciesInfo["Species Nemesis ID"]
-          }
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Nemesis page
-        </a>
-      );
-      setWoRMSLink(
-        <a
-          href={
-            selectedSpeciesInfo["WoRMS URL"]
-          }
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          WoRMS page
-        </a>
+      setLinks(
+        selectedSpeciesInfo,
+        setNemesisLink,
+        setWoRMSLink,
+        onSpeciesSelect,
+        setShowSpeciesDetail,
+        showingSpeciesDetail,
       )
-      onSpeciesSelect(selectedSpeciesInfo); //set to species id
-      setShowSpeciesDetail(true); // Populate sidebar with species' detail when a species is selected
-      showingSpeciesDetail(true); // For communicating with timeline that species is selected
     } else {
       alert("Please select a species.");
     }

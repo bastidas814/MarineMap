@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import Papa from "papaparse";
 import CollapsibleSection from "./CollapsibleSection";
+import { createBodyFromRegionalInfo, setLinks } from "./SidebarInfo";
 
 /**
  * Component for selecting and displaying information about multiple species.
@@ -51,68 +52,6 @@ function MultipleSpeciesSelection({
     setSelectedSpeciesB(event.target.value);
   };
 
-  /**
-   * helper function to create body content from regional info
-   * @param {*} regionalInfo the regional info object
-   * @param {*} nemesisRegionNames mapping of region codes to region names
-   * @param {*} setSpeciesFormattedRegionalInfo a callback to set the formatted regional info state
-   * @param {*} setSpeciesFormattedOcc a callback to set the formatted occurrence state
-   * @returns JSX body content
-   */
-  function createBodyFromRegionalInfo(regionalInfo, nemesisRegionNames, setSpeciesFormattedRegionalInfo, setSpeciesFormattedOcc) {
-    if (regionalInfo[1]) {
-      let body = Object.entries(regionalInfo[0]).map(
-        ([region, details]) => {
-          const { Year, Vectors, ...rest } = details;
-          return (
-            <div key={region} className="py-1">
-              <span className="font-bold">
-                {nemesisRegionNames[region]} ({Year}):
-              </span>
-              <br />
-              <span className="font-semibold"> Invasion Status: </span>{" "}
-              {rest["Invasion Status"]}
-              <br />
-              <span className="font-semibold"> Population Status: </span>{" "}
-              {rest["Population Status"]}
-              <br />
-              <span className="font-semibold"> Vectors: </span> {Vectors}
-            </div>
-          );
-        }
-      );
-      setSpeciesFormattedRegionalInfo(body);
-    } else {
-      let body = Object.entries(regionalInfo[0]).map(
-        (row) => {
-          return (
-            <div className="py-1">
-              <span className="font-bold">
-                {row[1]['Region']}:
-              </span>
-              <br />
-              <span className="font-semibold"> Introduction Origin: </span>{" "}
-              {row[1]["Introduction Origin"] || "Unknown"}
-              <br />
-              <span className="font-semibold"> Invasiveness: </span>{" "}
-              {row[1]["Invasiveness"] || "Unknown"}
-              <br />
-              <span className="font-semibold"> Occurrence: </span>{" "}
-              {row[1]["Occurrence"] || "Unknown"}
-              <br />
-              <span className="font-semibold"> Quality: </span>{" "}
-              {row[1]["Quality"]}
-            </div>
-          );
-        }
-      );
-      if (Object.keys(regionalInfo[0]).length === 0) {
-        body = "No data"
-      }
-      setSpeciesFormattedOcc(body);
-    }
-  }
-
   // Update formatted regional info on sidebar when selected species info changes
   useEffect(() => {
     if (!selectedSpeciesARegionalInfo || !selectedSpeciesBRegionalInfo){
@@ -141,62 +80,24 @@ function MultipleSpeciesSelection({
    */
   const handleButtonClick = () => {
     if (selectedSpeciesAInfo && selectedSpeciesBInfo) {
-      // TODO: Trigger map generation with selected species
-      setNemesisLinkA(
-        <a
-          href={
-            "https://invasions.si.edu/nemesis/species_summary/" +
-            selectedSpeciesAInfo["Species Nemesis ID"]
-          }
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Nemesis page ({selectedSpeciesAInfo["Species Name"]})
-        </a>
-      );
-      setNemesisLinkB(
-        <a
-          href={
-            "https://invasions.si.edu/nemesis/species_summary/" +
-            selectedSpeciesBInfo["Species Nemesis ID"]
-          }
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Nemesis page ({selectedSpeciesBInfo["Species Name"]})
-        </a>
-      );
-      setWoRMSLinkA(
-        <a
-          href={
-            selectedSpeciesAInfo["WoRMS URL"]
-          }
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          WoRMS page ({selectedSpeciesAInfo["Species Name"]})
-        </a>
+      setLinks(
+        selectedSpeciesAInfo,
+        setNemesisLinkA,
+        setWoRMSLinkA,
+        onSpeciesSelect,
+        setIsSidebarVisible,
+        showingSpeciesDetail,
       )
-      setWoRMSLinkB(
-        <a
-          href={
-            selectedSpeciesBInfo["WoRMS URL"]
-          }
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          WoRMS page ({selectedSpeciesBInfo["Species Name"]})
-        </a>
+      setLinks(
+        selectedSpeciesBInfo,
+        setNemesisLinkB,
+        setWoRMSLinkB,
+        onSpeciesSelectB,
+        setIsSidebarVisible,
+        showingSpeciesDetail,
       )
-
-      // use callbacks to give selected species info to parent component
-      onSpeciesSelect(selectedSpeciesAInfo);
-      onSpeciesSelectB(selectedSpeciesBInfo);
-
-      setIsSidebarVisible(true); // Show sidebar when a species is selected
-      showingSpeciesDetail(true); // For communicating with timeline that species is selected
     } else {
-      alert("Please select a species.");
+      alert("Please select two species.");
     }
   };
 
@@ -397,9 +298,6 @@ function MultipleSpeciesSelection({
               <p className="text-sm mt-2">(circle)</p>
 
             </div>
-            {/* <div className="items-center justify-center align-middle bg-slate-100">
-              <hr className="h-32 border-l w-fit bg-red-600 border-primary"></hr>
-            </div> */}
             <div className="bg-primary w-0.5"></div>
             <div className="flex flex-col w-1/2 p-2 border-">
               <h2 className="text-sm font-semibold">
@@ -417,9 +315,8 @@ function MultipleSpeciesSelection({
             </div>
           </div>
           
-          {/* <div className="flex gap-x-2 flex-row w-full border- border-blue-200"> */}
-            {formattedCollapsible()}
-          {/* </div> */}
+          {formattedCollapsible()}
+          
           <button
             className="mt-4 m-4 mx-16 btn btn-sm btn-secondary"
             onClick={() => {
