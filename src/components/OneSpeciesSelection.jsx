@@ -164,8 +164,6 @@ function OneSpeciesSelection({
       )}
 
       {/* Sidebar for species info */}
-      {/*         <div className="sidebar bg-gray-200 p-4 rounded-md w-1/3 h-full fixed right-0 top-0">
-       */}
       {showSpeciesDetail && selectedSpeciesInfo && (
         <div className="m-2 flex flex-col">
           <h2 className="text-xl font-semibold">

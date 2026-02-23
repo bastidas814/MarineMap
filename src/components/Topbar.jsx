@@ -20,8 +20,8 @@ function Topbar() {
           className="h-full p-2 pl-2 cursor-pointer"
         />
       </a> */}
-      <div className="flex flex-row text-base-100 gap-x-8 m-4 scroll-m-4 bg-scroll">
-        <p className="flex flex-row align-middle gap-1 cursor-pointer">
+      <div className="flex flex-row text-base-100 m-4 scroll-m-4 bg-scroll">
+        <p className="flex flex-row align-middle gap-1 cursor-pointer hover:bg-primary rounded p-4">
           <div className=" pt-1">
             <BsFillInfoCircleFill />
           </div>
@@ -89,7 +89,7 @@ function Topbar() {
             </div>
           </dialog>
         </p>
-        <p className="flex flex-row align-middle gap-1 cursor-pointer">
+        <p className="flex flex-row align-middle gap-1 cursor-pointer hover:bg-primary rounded p-4">
           <div className=" pt-1">
             <FiMail />
           </div>
