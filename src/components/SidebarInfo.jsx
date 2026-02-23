@@ -91,4 +91,33 @@ export function setLinks(speciesInfo, setNemesisLink, setWoRMSLink, onSpeciesSel
   showingSpeciesDetail(true);
 }
 
-export default { createBodyFromRegionalInfo, setLinks }
+export function createSpeciesHeader(speciesInfo) {
+  const ImgLink = speciesInfo["Species Img"];
+  const urlObj = new URL(ImgLink);
+  const ImgDomain = urlObj.hostname
+
+  return (
+    <>
+    <p className="text-sm mt-2">
+      {speciesInfo["Species Description"]}
+    </p>
+    <img
+      src={speciesInfo["Species Img"]}
+      alt={speciesInfo["Species Name"]}
+      className="w-full h-auto"
+    />
+    <a className="text-xs">
+      Image credit: <br></br>
+      <a className="text-primary"
+      href={speciesInfo["Species Img"]}
+      target="_blank"
+      rel="noopener noreferrer"
+      >
+        {ImgDomain}
+        </a>
+    </a>
+    </>
+  );
+}
+
+export default { createBodyFromRegionalInfo, setLinks, createSpeciesHeader }

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import Papa from "papaparse";
 import CollapsibleSection from "./CollapsibleSection";
-import { createBodyFromRegionalInfo, setLinks } from "./SidebarInfo";
+import { createBodyFromRegionalInfo, setLinks, createSpeciesHeader } from "./SidebarInfo";
 
 /**
  * Component for selecting and displaying information about multiple species.
@@ -277,9 +277,6 @@ function MultipleSpeciesSelection({
         </div>
       )}
 
-      {/* Sidebar for species info */}
-      {/*         <div className="sidebar bg-gray-200 p-4 rounded-md w-1/3 h-full fixed right-0 top-0">
-       */}
       {isSidebarVisible && selectedSpeciesAInfo && selectedSpeciesBInfo && (
         <div className="flex flex-col p-2 w-full">
           <div className="flex gap-x-2 flex-row w-full border- border-blue-200">
@@ -287,14 +284,8 @@ function MultipleSpeciesSelection({
               <h2 className="text-sm font-semibold">
                 {selectedSpeciesAInfo["Species Name"]}
               </h2>
-              <p className="text-sm mt-2">
-                {selectedSpeciesAInfo["Species Description"]}
-              </p>
-              <img
-                src={selectedSpeciesAInfo["Species Img"]}
-                alt={selectedSpeciesAInfo["Species Name"]}
-                className="w-full h-auto"
-              />
+              {createSpeciesHeader(selectedSpeciesAInfo)}
+
               <p className="text-sm mt-2">(circle)</p>
 
             </div>
@@ -303,20 +294,13 @@ function MultipleSpeciesSelection({
               <h2 className="text-sm font-semibold">
                 {selectedSpeciesBInfo["Species Name"]}
               </h2>
-              <p className="text-sm mt-2">
-                {selectedSpeciesBInfo["Species Description"]}
-              </p>
-              <img
-                src={selectedSpeciesBInfo["Species Img"]}
-                alt={selectedSpeciesBInfo["Species Name"]}
-                className="w-full h-auto"
-              />
+              {createSpeciesHeader(selectedSpeciesBInfo)}
               <p className="text-sm mt-2">(triangle)</p>
             </div>
           </div>
           
           {formattedCollapsible()}
-          
+
           <button
             className="mt-4 m-4 mx-16 btn btn-sm btn-secondary"
             onClick={() => {

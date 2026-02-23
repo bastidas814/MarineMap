@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import Papa from "papaparse";
 import { IoIosArrowDown } from "react-icons/io";
 import CollapsibleSection from "./CollapsibleSection";
-import { createBodyFromRegionalInfo, setLinks } from "./SidebarInfo"; 
+import { createBodyFromRegionalInfo, setLinks, createSpeciesHeader } from "./SidebarInfo"; 
 import { use } from "react";
 
 /**
@@ -99,41 +99,36 @@ function OneSpeciesSelection({
       return;
     }
     {/* <CollapsibleSection title="Classification:" body="Classification" /> */}
-    if (selectedSpeciesRegionalInfo[1]) {
-      return (
-        <>
-        <CollapsibleSection
-          title="First records:"
-          body={speciesFormatedRegionalInfo}
-        />
+    return (
+      <>
+      <CollapsibleSection
+        title={selectedSpeciesRegionalInfo[1]
+          ? "First records:"
+          : "Occurences:"
+        }
+        body={
+          selectedSpeciesRegionalInfo[1] 
+          ? speciesFormatedRegionalInfo
+          : speciesFormattedOcc
+        }
+      />
 
-        <CollapsibleSection
-          title="More details:"
-          body={nemesisLink}
-          bodyStyle="text-primary"
-        />
-        </>
-      )
-    } else if (!selectedSpeciesRegionalInfo[1]) {
-      return (
-        <>
-        <CollapsibleSection
-          title="Occurences:"
-          body={
+      <CollapsibleSection
+        title="More details:"
+        body={
           <>
-            {speciesFormattedOcc}
+          {WoRMSLink}
+          <br></br>
+          {selectedSpeciesRegionalInfo[1]
+            ? nemesisLink
+            : ""
+          } 
           </>
         }
-        />
-
-        <CollapsibleSection
-          title="More details:"
-          body={WoRMSLink}
-          bodyStyle="text-primary"
-        />
-        </>
-      )
-    }
+        bodyStyle="text-primary"
+      />
+      </>
+    )
   });
 
   return (
@@ -176,14 +171,8 @@ function OneSpeciesSelection({
           <h2 className="text-xl font-semibold">
             {selectedSpeciesInfo["Species Name"]}
           </h2>
-          <p className="text-sm mt-2">
-            {selectedSpeciesInfo["Species Description"]}
-          </p>
-          <img
-            src={selectedSpeciesInfo["Species Img"]}
-            alt={selectedSpeciesInfo["Species Name"]}
-            className="w-full h-auto"
-          />
+
+          {createSpeciesHeader(selectedSpeciesInfo)}
 
           {formattedCollapsible()}
 

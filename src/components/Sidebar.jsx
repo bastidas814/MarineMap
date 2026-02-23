@@ -25,7 +25,7 @@ function Sidebar({
       return
     }
     return (
-      <div className="left-9 absolute z-50 p-1 align-middle bg-base-300 border-2 border-secondary text-sm" 
+      <div className="left-9 absolute z-50 p-1 align-middle bg-base-300 border-2 border-secondary text-sm rounded" 
         style={{ top: `${hoverPos}px` }}
       >
         {hoverTab}
@@ -132,7 +132,7 @@ function Sidebar({
                     onSpeciesSelect={onSpeciesSelect}
                     showingSpeciesDetail={showingSpeciesDetail}
                     nemesisRegionNames={nemesisRegionNames}
-                                    />
+                    />
                 </div>
               ) : (
                 <div>
@@ -143,7 +143,7 @@ function Sidebar({
                   onSpeciesSelectB={onSpeciesSelectB}
                   showingSpeciesDetail={showingSpeciesDetail}
                   nemesisRegionNames={nemesisRegionNames}
-                   />
+                  />
                 </div>
               )}
             </div>
