@@ -45,7 +45,7 @@ function Topbar() {
                 <p className="">
                   Welcome to our interactive marine invasive species data
                   explorer! This platform is designed to make the spatial
-                  distribution of invasive species more accessible and visually
+                  distribution of invasive (non-native) and cryptogenic species more accessible and visually
                   engaging for researchers, conservationists, and the public.
                 </p>
 
@@ -119,10 +119,10 @@ function Topbar() {
                 <p>
                   You can contact us via email at{" "}
                   <a
-                    href="mailto:seagrantinfo@mit.edu"
+                    href="mailto:bastidas@mit.edu"
                     className="text-primary"
                   >
-                    seagrantinfo@mit.edu
+                    bastidas@mit.edu
                   </a>
                   .
                 </p>
