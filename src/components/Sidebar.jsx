@@ -111,7 +111,7 @@ function Sidebar({
               ✕
             </span>
           </div>
-          <div className="pb-2">
+          <div className="pb-1">
           {selectedTab === "oneSpecies" ? (
               <p className="font-bold text-center">
                 Review One Species

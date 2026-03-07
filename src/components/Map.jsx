@@ -259,7 +259,7 @@ function Map({
               // defaultPopupTemplateEnabled: true,
               // autoReposition: true,
               visibleElements: {
-                featureNavigation: true,
+                featureNavigation: false,
                 closeButton: true,
               },
               viewModel: {
@@ -293,10 +293,36 @@ function Map({
 
           geoJsonLayerRef.current = geoJsonLayer;
 
-          // Create a GraphicsLayer for currSites dots
           const graphicsLayer = new GraphicsLayer();
           webmap.add(graphicsLayer);
           graphicsLayerRef.current = graphicsLayer;
+
+          let highlightHandle = null;
+
+          // once the layer‑view is available highlight on hover
+          view.whenLayerView(graphicsLayer).then((layerView) => {
+            view.on("pointer-move", (evt) => {
+              view.hitTest(evt).then((response) => {
+                // clear previous highlight
+                if (highlightHandle) {
+                  highlightHandle.remove();
+                  highlightHandle = null;
+                }
+
+                const hit = response.results.find(
+                  (r) => r.graphic && r.graphic.layer === graphicsLayer
+                );
+
+                if (hit) {
+                  // highlight the graphic under the cursor
+                  highlightHandle = layerView.highlight(hit.graphic);
+                  view.container.style.cursor = "pointer";
+                } else {
+                  view.container.style.cursor = "default";
+                }
+              });
+            });
+          });
 
           viewRef.current = view;
         }
