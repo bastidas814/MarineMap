@@ -25,3 +25,9 @@ This website is deployed with [Vercel](https://vercel.com/) on the free plan. Th
 ## Usage
 ### To start a local dev server for the project:
 In the command prompt, locate the project folder and type ```npm install``` to install dependencies. After the installation, type ```npm run dev``` and navigate to the ```localhost``` link provided.
+
+# Contributors
+* Wendy Zhang, UROP 2024-2025, supported by the MIT Climate Sustainability Consortium
+* Sinjin Cho-Tupua, UROP 2026 IAP for credit
+* Emily Liu, UROP 2026 IAP and Spring, Direct Funding and MIT Sea Grant
+* Carolina Bastidas, MIT Sea Grant staff
