@@ -26,6 +26,17 @@ function Map({
   const [renderer, setRenderer] = useState(null);
   const lastUpdated = "02/01/2026";
 
+  const dataColors = {
+    nemesisSpecificSites: { fill: "rgba(147,192,209,1)", outline: "rgba(30, 102, 129, 0.8)", label: "NEMESIS Sites" },
+    rasSites: { fill: "rgba(245,200,92,1)", outline: "rgba(120, 92, 25, 0.8)", label: "RAS Sites" },
+    obisSites: { fill: "rgba(121,209,168,1)", outline: "rgba(17, 105, 64, 0.8)", label: "OBIS Sites" },
+  };
+
+  const regionColors = {
+    currentRegions: { fill: "rgba(102,129,174, 0.5)", outline: "primary", label: "Current Regions"},
+    pastRegions: { fill: "rgba(147,192,209, 0.3)", outline: "primary", label: "Current + Past Regions"},
+  }
+
   const [datasetsToShow, setDatasetToShow] = useState({
     nemesisBioregions: true,
     currentRegions: true,
@@ -360,15 +371,9 @@ function Map({
       }
       return;
     };
-    let currRegionsToShow = [];
-    if (datasetsToShow["currentRegions"] === true) {
-      currRegionsToShow = currRegions;
-    }
 
-    let pastRegionsToShow = [];
-    if (datasetsToShow["pastRegions"] === true) {
-      pastRegionsToShow = pastRegions;
-    }
+    const currRegionsToShow = datasetsToShow["currentRegions"] ? currRegions : [];
+    const pastRegionsToShow = datasetsToShow["pastRegions"] ? pastRegions : [];
 
     if (geoJsonLayerRef.current) {
       loadModules(["esri/renderers/UniqueValueRenderer"]).then(
@@ -459,44 +464,45 @@ function Map({
       size: 7 + Math.round(Math.sqrt(v/max) * 50) }));
   };
 
-  const createSiteFeatureLayer = (Graphic, FeatureLayer, sitesData, colors, style, datasetKey) => {
-    const features = sitesData.map((site, index) => {
-      return new Graphic({
-        geometry: {
-          type: "point",
-          longitude: parseFloat(site.Longitude),
-          latitude: parseFloat(site.Latitude),
-        },
-        attributes: {
-          ObjectID: index,
-          dataset: datasetKey,
-          species: style === "circle" ? "A" : "B",
-          ...site, 
-        },
-      })
-    });
-
+  const createFeatures = (Graphic, sitesData, datasetKey, style) => 
+    sitesData.map((site, index) => new Graphic({
+      geometry: {
+        type: "point",
+        longitude: parseFloat(site.Longitude),
+        latitude: parseFloat(site.Latitude),
+      },
+      attributes: site,
+    }));
+  
+  const createFields = (sitesData) => {
     const sampleSite = sitesData[0] || {};
-    const additionalFields = Object.keys(sampleSite).map(key => {
-      const value = sampleSite[key];
-      let type = 'string';
-      if (typeof value === 'number') type = 'double';
-      return { name: key, type };
-    });
-
-    const fields = [
+    const additionalFields = Object.keys(sampleSite).map
+    (
+      key => {
+        const value = sampleSite[key];
+        let type = 'string';
+        if (typeof value === 'number') type = 'double';
+        return { 
+          name: key, 
+          type 
+        };
+      }
+    );
+    return [
       { name: "ObjectID", type: "oid" },
       { name: "dataset", type: "string" },
       { name: "species", type: "string" },
       ...additionalFields,
     ];
-    console.log("fields", fields)
+  }
 
-    return new FeatureLayer({
-      source: features,
+  const createSiteFeatureLayer = 
+  (Graphic, FeatureLayer, sitesData, colors, style, datasetKey) => 
+    new FeatureLayer({
+      source: createFeatures(Graphic, sitesData, datasetKey, style),
       objectIdField: "ObjectID",
       geometryType: "point",
-      fields: fields,
+      fields: createFields(sitesData),
       outFields: ["*"],
       featureReduction: {
         type: "cluster",
@@ -513,14 +519,12 @@ function Map({
             symbol: {
               type: "text",
               color: "#000000",
-              font: {
-                weight: "bold",
-                size: "10px",
-              },
+              font: { weight: "bold", size: "10px" },
             },
             labelPlacement: "center-center",
           },
         ],
+
         popupTemplate: {
           content: (feature) => {
             const count = feature.graphic.attributes.cluster_count;
@@ -544,18 +548,11 @@ function Map({
         }],
       },
       
-      popupTemplate: 
-      {
+      popupTemplate: {
         content:
-        (feature) => {
-          return createSitePopupTemplate
-          (
-            feature.graphic.attributes
-          ).content;
-        },
+        (feature) => createSitePopupTemplate(feature.graphic.attributes).content,
       },
     });
-  };
   
   // Update map by plotting clustered sites
   useEffect(() => {
@@ -564,12 +561,6 @@ function Map({
       if (graphicsLayerRef.current) {
         plotCountRef.current += 1;
         graphicsLayerRef.current.removeAll(); // Clear existing layers
-
-        const dataColors = {
-          nemesisSpecificSites: { fill: "rgba(147,192,209,1)", outline: "rgba(30, 102, 129, 0.8)" },
-          rasSites: { fill: "rgba(245,200,92,1)", outline: "rgba(120, 92, 25, 0.8)" },
-          obisSites: { fill: "rgba(121,209,168,1)", outline: "rgba(17, 105, 64, 0.8)" },
-        };
 
         const speciesAStyle = "circle";
         const speciesBStyle = "triangle";
@@ -596,38 +587,14 @@ function Map({
 
   // Create a legend showing only datasetsToShow
   const Legend = ({ datasetsToShow }) => {
-    const legendItems = [
-      {
-        key: "currentRegions",
-        color: "rgba(102,129,174, 0.5)",
-        border: "primary",
-        label: "Current Regions",
-      },
-      {
-        key: "pastRegions",
-        color: "rgba(147,192,209, 0.3)",
-        border: "primary",
-        label: "Current + Past Regions",
-      },
-      {
-        key: "nemesisSpecificSites",
-        color: "rgba(147,192,209,0.5)",
-        border: "primary",
-        label: "Nemesis Sites",
-      },
-      {
-        key: "rasSites",
-        color: "rgba(245,200,92, 0.5)",
-        border: "primary",
-        label: "RAS Sites",
-      },
-      {
-        key: "obisSites",
-        color: "rgba(121, 209, 168, 1)",
-        border: "primary",
-        label: "OBIS Sites",
-      },
-    ];
+    const legendItems = Object.entries({ ...regionColors, ...dataColors }).map(([key, colors]) => {
+      return {
+        key: key,
+        color: colors.fill,
+        border: colors.outline,
+        label: colors.label,
+      }
+    });
 
     const itemsToShow = legendItems.filter(({ key }) => datasetsToShow[key]);
 
@@ -649,7 +616,7 @@ function Map({
             <div className="flex items-center" key={index}>
               <span
                 className={`inline-block w-4 h-4 mr-2 border-2 border-${border}`}
-                style={{ backgroundColor: color }}
+                style={{ backgroundColor: color, borderColor: border }}
               ></span>
               <span>{label}</span>
             </div>
@@ -683,7 +650,6 @@ function Map({
       </div>
 
       <div ref={MapElem} className="h-full"></div>
-      {/* Legend */}
       <Legend datasetsToShow={datasetsToShow} />
     </div>
   );
