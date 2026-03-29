@@ -12,12 +12,8 @@ function Timeline({ allowedYears, setNewYear }) {
   const timelineEnd = Math.max(...allowedYears) + 1; // One year after the maximum year
 
   const [allYears, setAllYears] = useState(false);
-  // console.log(allowedYears);
   const [rangeValue, setRangeValue] = useState(allowedYears[0]);
   const [isPlaying, setIsPlaying] = useState(false);
-  // console.log("range value", rangeValue, allowedYears[0]);
-
-  console.log("Timeline allowedYears", allowedYears);
 
   useEffect(() => {
     setRangeValue(allowedYears[0]);

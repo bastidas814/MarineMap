@@ -193,6 +193,8 @@ function Map({
         "esri/views/MapView",
         "esri/WebMap",
         "esri/layers/GeoJSONLayer",
+        "esri/layers/GroupLayer",
+        "esri/layers/FeatureLayer",
         "esri/PopupTemplate",
         "esri/renderers/UniqueValueRenderer",
         "esri/widgets/Popup",
@@ -208,6 +210,8 @@ function Map({
           MapView,
           WebMap,
           GeoJSONLayer,
+          GroupLayer,
+          FeatureLayer,
           PopupTemplate,
           UniqueValueRenderer,
           Popup,
@@ -293,36 +297,43 @@ function Map({
 
           geoJsonLayerRef.current = geoJsonLayer;
 
-          const graphicsLayer = new GraphicsLayer();
-          webmap.add(graphicsLayer);
-          graphicsLayerRef.current = graphicsLayer;
+          // const graphicsLayer = new GraphicsLayer();
+          // webmap.add(graphicsLayer);
+          // graphicsLayerRef.current = graphicsLayer;
+          const groupLayer = new GroupLayer({ title: "Site data" });
+          webmap.add(groupLayer);
+          graphicsLayerRef.current = groupLayer;
 
+          //TODO: fix highlight
           let highlightHandle = null;
 
           // once the layer‑view is available highlight on hover
-          view.whenLayerView(graphicsLayer).then((layerView) => {
-            view.on("pointer-move", (evt) => {
-              view.hitTest(evt).then((response) => {
-                // clear previous highlight
-                if (highlightHandle) {
-                  highlightHandle.remove();
-                  highlightHandle = null;
-                }
+          // view.whenLayerView(groupLayer).then((layerView) => {
+          //   console.log("working")
+          //   view.on("pointer-move", (evt) => {
+          //     console.log("working2")
+          //     view.hitTest(evt).then((response) => {
+          //       console.log("working3")
+          //       // clear previous highlight
+          //       if (highlightHandle) {
+          //         highlightHandle.remove();
+          //         highlightHandle = null;
+          //       }
 
-                const hit = response.results.find(
-                  (r) => r.graphic && r.graphic.layer === graphicsLayer
-                );
+          //       const hit = response.results.find(
+          //         (r) => r.graphic && r.graphic.layer === groupLayer
+          //       );
 
-                if (hit) {
-                  // highlight the graphic under the cursor
-                  highlightHandle = layerView.highlight(hit.graphic);
-                  view.container.style.cursor = "pointer";
-                } else {
-                  view.container.style.cursor = "default";
-                }
-              });
-            });
-          });
+          //       if (hit) {
+          //         // highlight the graphic under the cursor
+          //         highlightHandle = layerView.highlight(hit.graphic);
+          //         view.container.style.cursor = "pointer";
+          //       } else {
+          //         view.container.style.cursor = "default";
+          //       }
+          //     });
+          //   });
+          // });
 
           viewRef.current = view;
         }
@@ -399,43 +410,6 @@ function Map({
   // Adding specific sites to the map //
   //----------------------------------//
 
-  // Update the map by ploting the currSites' locations
-  useEffect(() => {
-    if (graphicsLayerRef.current) {
-      plotCountRef.current += 1;
-      graphicsLayerRef.current.removeAll(); // Clear once at the beginning
-
-      const dataColors = {
-      "nemesisSpecificSites": "rgba(147,192,209,1)",
-      "rasSites": "rgba(245,200,92,1)",
-      "obisSites": "rgba(121,209,168,1)",
-      };
-
-      const speciesAStyle = "circle";
-      const speciesBStyle = "triangle";
-
-      // plot species 1 data
-      Object.entries(dataColors).forEach(([key, color]) => {
-        if (datasetsToShow[key] && currSites[key]) {
-          plotSites(
-            {fill: color, outline: "rgba(6,9,14,0.8)"},
-            currSites[key], speciesAStyle
-          );
-        }
-      });
-
-      // plot species 2 data
-      Object.entries(dataColors).forEach(([key, color]) => {
-        if (datasetsToShow[key] && currSitesB[key]) {
-          plotSites(
-            {fill: color, outline: "rgba(6,9,14,0.8)"},
-            currSitesB[key], speciesBStyle
-          );
-        }
-      });
-    }
-  }, [graphicsLayerRef.current, currSites, currSitesB, datasetsToShow]);
-
   const createSitePopupTemplate = (siteInfo) => {
     let content = `<p><strong>Record Date:</strong> ${siteInfo["Date"]}</p>`;
     if (siteInfo["Site Code"]) {
@@ -478,60 +452,147 @@ function Map({
 
    };
 
-  /** Plot currSitesToShow sites onto the map in the colors color
-   *
-   * @param {fill: string, outline: string} colors
-   * @param {Array<Object>} currSitesToShow: Array of region objects
-   */
-  const plotSites = (colors, currSitesToShow, style) => {
-    if (graphicsLayerRef.current) {
-      const currentVersion = plotCountRef.current;
-      if (currSitesToShow.length > 0) {
-        loadModules(["esri/Graphic"]).then(([Graphic]) => {
-
-          // make sure version hasn't changed
-          if (currentVersion !== plotCountRef.current) {
-            return;
-          }
-
-          const siteGraphics = currSitesToShow
-            .map((site) => {
-              // Extract properties with fallbacks for missing values
-
-              const lon =
-                site.Longitude != null ? parseFloat(site.Longitude) : null;
-              const lat =
-                site.Latitude != null ? parseFloat(site.Latitude) : null;
-
-              // Only create a Graphic if both longitude and latitude are valid
-              if (lon != null && lat != null) {
-                return new Graphic({
-                  geometry: {
-                    type: "point",
-                    longitude: lon,
-                    latitude: lat,
-                  },
-                  symbol: {
-                    type: "simple-marker",
-                    style: style || "circle",
-                    color: colors["fill"],
-                    size: "7px",
-                    outline: { color: colors["outline"], width: 0.6 },
-                  },
-                  // attributes: { id, name },
-                  popupTemplate: createSitePopupTemplate(site),
-                });
-              }
-              return null; // Skip invalid data points
-            })
-            .filter((graphic) => graphic != null);
-          graphicsLayerRef.current.addMany(siteGraphics); // Add new graphics
-        });
-      } else {
-        graphicsLayerRef.current.removeAll(); // Clear all graphics if no sites
-      }
-    }
+  const makeStops = (max) => {
+    const points = [1,2,5,10,25,50,100,200,300,400,500];
+    return points.map(v => ({ 
+      value: v, 
+      size: 7 + Math.round(Math.sqrt(v/max) * 50) }));
   };
+
+  const createSiteFeatureLayer = (Graphic, FeatureLayer, sitesData, colors, style, datasetKey) => {
+    const features = sitesData.map((site, index) => {
+      return new Graphic({
+        geometry: {
+          type: "point",
+          longitude: parseFloat(site.Longitude),
+          latitude: parseFloat(site.Latitude),
+        },
+        attributes: {
+          ObjectID: index,
+          dataset: datasetKey,
+          species: style === "circle" ? "A" : "B",
+          ...site, 
+        },
+      })
+    });
+
+    const sampleSite = sitesData[0] || {};
+    const additionalFields = Object.keys(sampleSite).map(key => {
+      const value = sampleSite[key];
+      let type = 'string';
+      if (typeof value === 'number') type = 'double';
+      return { name: key, type };
+    });
+
+    const fields = [
+      { name: "ObjectID", type: "oid" },
+      { name: "dataset", type: "string" },
+      { name: "species", type: "string" },
+      ...additionalFields,
+    ];
+    console.log("fields", fields)
+
+    return new FeatureLayer({
+      source: features,
+      objectIdField: "ObjectID",
+      geometryType: "point",
+      fields: fields,
+      outFields: ["*"],
+      featureReduction: {
+        type: "cluster",
+        clusterRadius: "70px",
+        clusterMinSize: "15px",
+        clusterMaxSize: "50px",
+        
+        labelingInfo: [
+          {
+            // deconflictionStrategy: "none",
+            labelExpressionInfo: {
+              expression: "Text($feature.cluster_count, '#,###')",
+            },
+            symbol: {
+              type: "text",
+              color: "#000000",
+              font: {
+                weight: "bold",
+                size: "10px",
+              },
+            },
+            labelPlacement: "center-center",
+          },
+        ],
+        popupTemplate: {
+          content: (feature) => {
+            const count = feature.graphic.attributes.cluster_count;
+            return `<p><strong>${count} records</strong>`;
+          },
+        },
+      },
+      renderer: {
+        type: "simple",
+        symbol: {
+          type: "simple-marker",
+          style: style,
+          color: colors.fill,
+          size: 7,
+          outline: { color: colors.outline, width: 1.5 },
+        },
+        visualVariables: [{
+          type: "size",
+          field: "cluster_count",
+          stops: makeStops(300)
+        }],
+      },
+      
+      popupTemplate: 
+      {
+        content:
+        (feature) => {
+          return createSitePopupTemplate
+          (
+            feature.graphic.attributes
+          ).content;
+        },
+      },
+    });
+  };
+  
+  // Update map by plotting clustered sites
+  useEffect(() => {
+    loadModules(["esri/Graphic", "esri/layers/FeatureLayer"], { url: "https://js.arcgis.com/4.25/" })
+    .then(([Graphic, FeatureLayer]) => {
+      if (graphicsLayerRef.current) {
+        plotCountRef.current += 1;
+        graphicsLayerRef.current.removeAll(); // Clear existing layers
+
+        const dataColors = {
+          nemesisSpecificSites: { fill: "rgba(147,192,209,1)", outline: "rgba(30, 102, 129, 0.8)" },
+          rasSites: { fill: "rgba(245,200,92,1)", outline: "rgba(120, 92, 25, 0.8)" },
+          obisSites: { fill: "rgba(121,209,168,1)", outline: "rgba(17, 105, 64, 0.8)" },
+        };
+
+        const speciesAStyle = "circle";
+        const speciesBStyle = "triangle";
+
+        // Plot species A data
+        Object.entries(dataColors).forEach(([key, colors]) => {
+          if (datasetsToShow[key] && currSites[key]) {
+            const layer = createSiteFeatureLayer(Graphic, FeatureLayer, currSites[key], colors, speciesAStyle, key);
+            graphicsLayerRef.current.add(layer);
+          }
+        });
+
+        // Plot species B data
+        Object.entries(dataColors).forEach(([key, colors]) => {
+          if (datasetsToShow[key] && currSitesB[key]) {
+            const layer = createSiteFeatureLayer(Graphic, FeatureLayer, currSitesB[key], colors, speciesBStyle, key);
+            graphicsLayerRef.current.add(layer);
+          }
+        });
+      }
+    })
+  }, [graphicsLayerRef.current, currSites, currSitesB, datasetsToShow]);
+
 
   // Create a legend showing only datasetsToShow
   const Legend = ({ datasetsToShow }) => {
