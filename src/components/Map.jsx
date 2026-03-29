@@ -205,12 +205,8 @@ function Map({
         "esri/WebMap",
         "esri/layers/GeoJSONLayer",
         "esri/layers/GroupLayer",
-        "esri/layers/FeatureLayer",
         "esri/PopupTemplate",
         "esri/renderers/UniqueValueRenderer",
-        "esri/widgets/Popup",
-        "esri/Graphic",
-        "esri/layers/GraphicsLayer",
         "esri/geometry/SpatialReference",
         "esri/geometry/Extent"
       ],
@@ -222,12 +218,8 @@ function Map({
           WebMap,
           GeoJSONLayer,
           GroupLayer,
-          FeatureLayer,
           PopupTemplate,
           UniqueValueRenderer,
-          Popup,
-          Graphic,
-          GraphicsLayer,
           SpatialReference,
           Extent,
         ]) => {
@@ -319,32 +311,37 @@ function Map({
           let highlightHandle = null;
 
           // once the layer‑view is available highlight on hover
-          // view.whenLayerView(groupLayer).then((layerView) => {
-          //   console.log("working")
-          //   view.on("pointer-move", (evt) => {
-          //     console.log("working2")
-          //     view.hitTest(evt).then((response) => {
-          //       console.log("working3")
-          //       // clear previous highlight
-          //       if (highlightHandle) {
-          //         highlightHandle.remove();
-          //         highlightHandle = null;
-          //       }
+          view.whenLayerView(groupLayer).then((layerView) => {
+            view.on("pointer-move", (evt) => {
+              view.hitTest(evt).then((response) => {
+                if (highlightHandle) {
+                  highlightHandle.remove();
+                  highlightHandle = null;
+                }
 
-          //       const hit = response.results.find(
-          //         (r) => r.graphic && r.graphic.layer === groupLayer
-          //       );
+                const hit = response.results.find(
+                  (r) => r.graphic && 
+                  r.graphic.layer
+                );
 
-          //       if (hit) {
-          //         // highlight the graphic under the cursor
-          //         highlightHandle = layerView.highlight(hit.graphic);
-          //         view.container.style.cursor = "pointer";
-          //       } else {
-          //         view.container.style.cursor = "default";
-          //       }
-          //     });
-          //   });
-          // });
+                if (!hit) {
+                  view.container.style.cursor = "default";
+                  return;
+                }
+
+                const featureLayer = hit.graphic.layer;
+                view.whenLayerView(featureLayer).then((layerView) => {
+                  if (layerView.highlight) {
+                    if (featureLayer.type === "feature") {
+                      highlightHandle = layerView.highlight(hit.graphic);
+                    }
+                    view.container.style.cursor = "pointer";
+                  }
+                });
+
+              });
+            });
+          });
 
           viewRef.current = view;
         }
@@ -451,10 +448,7 @@ function Map({
       <p><strong>Source:</strong> ${siteInfo["Source(s)"]}</p>
       `;
     }
-    return {
-      content: content,
-    };
-
+    return { content: content };
    };
 
   const makeStops = (max) => {
