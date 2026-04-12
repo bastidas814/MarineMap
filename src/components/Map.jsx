@@ -209,7 +209,6 @@ function Map({
         "esri/layers/GroupLayer",
         "esri/PopupTemplate",
         "esri/renderers/UniqueValueRenderer",
-        "esri/geometry/SpatialReference",
         "esri/geometry/Extent"
       ],
       { url: "https://js.arcgis.com/4.25/" }
@@ -222,7 +221,6 @@ function Map({
           GroupLayer,
           PopupTemplate,
           UniqueValueRenderer,
-          SpatialReference,
           Extent,
         ]) => {
           // Adding styles for the popup
@@ -477,7 +475,6 @@ function Map({
         const value = sampleSite[key];
         let type = 'string';
         if (key === 'Date') {
-          console.log("value", value)
           type = 'double';
         }
         else if (typeof value === 'number') type = 'double';
@@ -528,18 +525,27 @@ function Map({
           content: (feature) => {
             const layer = feature.graphic.layer;
             const count = feature.graphic.attributes.cluster_count;
-            console.log("id", layer)
-            let speciesInfo = '';
-            if (count > 10) {
-              return `<p><strong>${count} records</strong></p><span>Zoom in to see more.</span>`;
-            }
+
             const query = layer.createQuery();
+            const view = layer.view;
+
+            query.geometry = feature.graphic.geometry;
+
+            query.distance = view && view.resolution
+            ? query.distance = 70*view.resolution
+            : 50000;
+            query.units = "meters";
             query.outFields = ["Date"];
+            query.returnGeometry = false;
             return layer.queryFeatures(query).then((result) => {
-              const dates = result.features.map(f => f.attributes.Date).filter(d => d);
-              // const uniqueDates = [...new Set(dates)].sort((a, b) => new Date(a) - new Date(b));
-              const dateInfo = dates.length > 0 ? `<p><strong>Dates:</strong> ${dates}</p>` : '';
-              return `<p><strong>${count} records</strong></p>${dateInfo}${speciesInfo}<span>Zoom in to see more.</span>`;
+              const dates = result.features.map(f => f.attributes.Date);
+              const uniqueDates = [...new Set(dates)].sort((a, b) => a-b);
+              const dateInfo = uniqueDates.length > 0 
+                ? `<p><strong>Dates:</strong><br>${uniqueDates.join('<br>')}</p>` 
+                : '';
+              return `<p><strong>${count} records</strong></p>
+              <span>Zoom in to see more.</span>
+              ${dateInfo}`;
             });
           },
         },
@@ -576,17 +582,14 @@ function Map({
 
         const speciesAStyle = "circle";
         const speciesBStyle = "triangle";
-
-        // Plot species A data
+        
         Object.entries(dataColors).forEach(([key, colors]) => {
+          // Plot species A data
           if (datasetsToShow[key] && currSites[key]) {
             const layer = createSiteFeatureLayer(Graphic, FeatureLayer, currSites[key], colors, speciesAStyle, key);
             graphicsLayerRef.current.add(layer);
           }
-        });
-
-        // Plot species B data
-        Object.entries(dataColors).forEach(([key, colors]) => {
+          // Plot species B data
           if (datasetsToShow[key] && currSitesB[key]) {
             const layer = createSiteFeatureLayer(Graphic, FeatureLayer, currSitesB[key], colors, speciesBStyle, key);
             graphicsLayerRef.current.add(layer);
