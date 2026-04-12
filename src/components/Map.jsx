@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { loadModules } from "esri-loader";
 import "../styles/mapStyle.css";
 import MapSettings from "./MapSettings";
+import { use } from "react";
 
 function Map({
   allYears = false,
@@ -196,6 +197,7 @@ function Map({
   // Creating the main section of the map with regions //
   //---------------------------------------------------//
   const [basemap, setBasemap] = useState("satellite");
+  const [clusterOn, setClusterOn] = useState(true);
 
   // Main section to create the whole map
   useEffect(() => {
@@ -452,7 +454,7 @@ function Map({
    };
 
   const makeStops = (max) => {
-    const points = [1,2,5,10,25,50,100,200,300,400,500];
+    const points = [1,2,5,10,50,100,300,500];
     return points.map(v => ({ 
       value: v, 
       size: 7 + Math.round(Math.sqrt(v/max) * 50) }));
@@ -470,15 +472,18 @@ function Map({
   
   const createFields = (sitesData) => {
     const sampleSite = sitesData[0] || {};
-    const additionalFields = Object.keys(sampleSite).map
-    (
-      key => {
+    const additionalFields = Object.keys(sampleSite).map(
+      (key) => {
         const value = sampleSite[key];
         let type = 'string';
-        if (typeof value === 'number') type = 'double';
-        return { 
-          name: key, 
-          type 
+        if (key === 'Date') {
+          console.log("value", value)
+          type = 'double';
+        }
+        else if (typeof value === 'number') type = 'double';
+        return {
+          name: key,
+          type: type,
         };
       }
     );
@@ -488,7 +493,7 @@ function Map({
       { name: "species", type: "string" },
       ...additionalFields,
     ];
-  }
+  };
 
   const createSiteFeatureLayer = 
   (Graphic, FeatureLayer, sitesData, colors, style, datasetKey) => 
@@ -498,7 +503,7 @@ function Map({
       geometryType: "point",
       fields: createFields(sitesData),
       outFields: ["*"],
-      featureReduction: {
+      featureReduction: clusterOn ? {
         type: "cluster",
         clusterRadius: "70px",
         clusterMinSize: "15px",
@@ -521,11 +526,24 @@ function Map({
 
         popupTemplate: {
           content: (feature) => {
+            const layer = feature.graphic.layer;
             const count = feature.graphic.attributes.cluster_count;
-            return `<p><strong>${count} records</strong>`;
+            console.log("id", layer)
+            let speciesInfo = '';
+            if (count > 10) {
+              return `<p><strong>${count} records</strong></p><span>Zoom in to see more.</span>`;
+            }
+            const query = layer.createQuery();
+            query.outFields = ["Date"];
+            return layer.queryFeatures(query).then((result) => {
+              const dates = result.features.map(f => f.attributes.Date).filter(d => d);
+              // const uniqueDates = [...new Set(dates)].sort((a, b) => new Date(a) - new Date(b));
+              const dateInfo = dates.length > 0 ? `<p><strong>Dates:</strong> ${dates}</p>` : '';
+              return `<p><strong>${count} records</strong></p>${dateInfo}${speciesInfo}<span>Zoom in to see more.</span>`;
+            });
           },
         },
-      },
+      } : null,
       renderer: {
         type: "simple",
         symbol: {
@@ -576,7 +594,7 @@ function Map({
         });
       }
     })
-  }, [graphicsLayerRef.current, currSites, currSitesB, datasetsToShow]);
+  }, [graphicsLayerRef.current, currSites, currSitesB, datasetsToShow, clusterOn]);
 
 
   // Create a legend showing only datasetsToShow
@@ -637,6 +655,8 @@ function Map({
           datasetsToShow={datasetsToShow}
           setBasemap={setBasemap}
           basemap={basemap}
+          setClusterOn={setClusterOn}
+          clusterOn={clusterOn}
         />
       </div>
       <div className={`absolute text-xs text-primary-content bottom-0 z-10 bg-none p-2 ${left_width()}`}>

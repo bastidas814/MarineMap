@@ -6,6 +6,8 @@ function MapSettings({
   datasetsToShow,
   setBasemap,
   basemap,
+  setClusterOn,
+  clusterOn,
 }) {
   // Initialize the datasets state based on the passed `datasetsToShow` prop
   const [datasets, setDatasets] = useState({
@@ -183,6 +185,20 @@ function MapSettings({
                   className="checkbox checkbox-xs mr-2"
                 />
                 <span className="label-text">Ocean</span>
+              </label>
+            </div>
+          </div>
+          <div className="flex flex-col">
+            <p className="font-semibold">Data clustering:</p>
+            <div className="form-control items-start">
+              <label className="label cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={clusterOn}
+                  onChange={() => setClusterOn(!clusterOn)}
+                  className="checkbox checkbox-xs mr-2"
+                />
+                <span className="label-text">Cluster adjacent records</span>
               </label>
             </div>
           </div>
