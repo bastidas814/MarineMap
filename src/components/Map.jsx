@@ -28,14 +28,35 @@ function Map({
   const lastUpdated = "02/01/2026";
 
   const dataColors = {
-    nemesisSpecificSites: { fill: "rgba(147,192,209,1)", outline: "rgba(30, 102, 129, 0.8)", label: "NEMESIS Sites" },
-    rasSites: { fill: "rgba(245,200,92,1)", outline: "rgba(120, 92, 25, 0.8)", label: "RAS Sites" },
-    obisSites: { fill: "rgba(121,209,168,1)", outline: "rgba(17, 105, 64, 0.8)", label: "OBIS Sites" },
+    nemesisSpecificSites: { 
+      fill: "rgba(147,192,209,1)", 
+      outline: "rgba(30, 102, 129, 0.8)", 
+      label: "NEMESIS Sites" 
+    },
+    rasSites: { 
+      fill: "rgba(245,200,92,1)", 
+      outline: "rgba(120, 92, 25, 0.8)", 
+      label: "RAS Sites" 
+    },
+    obisSites: { 
+      fill: "rgba(121,209,168,1)", 
+      outline: "rgba(17, 105, 64, 0.8)", 
+      label: "OBIS Sites" 
+    },
   };
 
   const regionColors = {
-    currentRegions: { fill: "rgba(102,129,174, 0.5)", outline: "primary", label: "Current Regions"},
-    pastRegions: { fill: "rgba(147,192,209, 0.3)", outline: "primary", label: "Current + Past Regions"},
+    currentRegions: { 
+      fill: "rgba(102,129,174, 0.5)", 
+      outlineColor: "rgb(102,129,174)", 
+      outline: "primary", 
+      label: "Current Regions"},
+    pastRegions: { 
+      fill: "rgba(147,192,209, 0.3)",
+      outlineColor: "rgb(147,192,209)",
+      outline: "primary", 
+      label: "Current + Past Regions"
+    },
   }
 
   const [datasetsToShow, setDatasetToShow] = useState({
@@ -187,7 +208,8 @@ function Map({
         }
       })
       .catch((err) => console.error("Error updating popup:", err));
-  }, [regionsDetail,
+  }, 
+  [regionsDetail,
     geoJsonLayerRef.current,
     allYears,
     currRegions
@@ -257,7 +279,7 @@ function Map({
             constraints: {
               geometry: extent,
               minZoom: 3,
-              maxZoom: 10,
+              maxZoom: 15,
             },
             popup: {
               dockEnabled: false,
@@ -369,36 +391,32 @@ function Map({
       return;
     };
 
-    const currRegionsToShow = datasetsToShow["currentRegions"] ? currRegions : [];
-    const pastRegionsToShow = datasetsToShow["pastRegions"] ? pastRegions : [];
-
     if (geoJsonLayerRef.current) {
-      loadModules(["esri/renderers/UniqueValueRenderer"]).then(
-        ([UniqueValueRenderer]) => {
-          const newRenderer = new UniqueValueRenderer({
-            field: "REG_NEWREG",
-            uniqueValueInfos: [
-              ...pastRegionsToShow.map((region) => ({
-                value: region,
-                symbol: {
-                  type: "simple-fill",
-                  color: [147, 192, 209, 0.3], // lighter accent color
-                  outline: { color: [147, 192, 209], width: 1 },
-                },
-              })),
-              ...currRegionsToShow.map((region) => ({
-                value: region,
-                symbol: {
-                  type: "simple-fill",
-                  color: [102, 129, 174, 0.5], // primary for current regions
-                  outline: { color: [102, 129, 174], width: 1 },
-                },
-              })),
-            ],
-          });
-          setRenderer(newRenderer);
-        }
-      );
+      loadModules(["esri/renderers/UniqueValueRenderer"]).then(([UniqueValueRenderer]) => {
+        
+        const regionConfigs = [
+          { id: "pastRegions", data: pastRegions },
+          { id: "currentRegions", data: currRegions }
+        ];
+
+        const uniqueValueInfos = regionConfigs
+          .filter(config => datasetsToShow[config.id])
+          .flatMap(config => 
+            config.data.map(region => ({
+              value: region,
+              symbol: {
+                type: "simple-fill",
+                color: regionColors[config.id].fill,
+                outline: { color: regionColors[config.id].outlineColor, width: 1 },
+              },
+            }))
+          );
+
+        setRenderer(new UniqueValueRenderer({
+          field: "REG_NEWREG",
+          uniqueValueInfos
+        }));
+      });
     }
   }, [currRegions, pastRegions, datasetsToShow]);
 
@@ -458,7 +476,7 @@ function Map({
       size: 7 + Math.round(Math.sqrt(v/max) * 50) }));
   };
 
-  const createFeatures = (Graphic, sitesData, datasetKey, style) => 
+  const createFeatures = (Graphic, sitesData) => 
     sitesData.map((site, index) => new Graphic({
       geometry: {
         type: "point",
@@ -493,9 +511,9 @@ function Map({
   };
 
   const createSiteFeatureLayer = 
-  (Graphic, FeatureLayer, sitesData, colors, style, datasetKey) => 
+  (Graphic, FeatureLayer, sitesData, colors, style) => 
     new FeatureLayer({
-      source: createFeatures(Graphic, sitesData, datasetKey, style),
+      source: createFeatures(Graphic, sitesData),
       objectIdField: "ObjectID",
       geometryType: "point",
       fields: createFields(sitesData),
@@ -540,9 +558,10 @@ function Map({
             return layer.queryFeatures(query).then((result) => {
               const dates = result.features.map(f => f.attributes.Date);
               const uniqueDates = [...new Set(dates)].sort((a, b) => a-b);
-              const dateInfo = uniqueDates.length > 0 
-                ? `<p><strong>Dates:</strong><br>${uniqueDates.join('<br>')}</p>` 
-                : '';
+              // const dateInfo = uniqueDates.length > 0 
+              //   ? `<p><strong>Dates:</strong><br>${uniqueDates.join('<br>')}</p>` 
+              //   : '';
+              const dateInfo = "";
               return `<p><strong>${count} records</strong></p>
               <span>Zoom in to see more.</span>
               ${dateInfo}`;
@@ -574,25 +593,34 @@ function Map({
   
   // Update map by plotting clustered sites
   useEffect(() => {
-    loadModules(["esri/Graphic", "esri/layers/FeatureLayer"], { url: "https://js.arcgis.com/4.25/" })
+    loadModules(
+      ["esri/Graphic", "esri/layers/FeatureLayer"], 
+      { url: "https://js.arcgis.com/4.25/" }
+    )
     .then(([Graphic, FeatureLayer]) => {
       if (graphicsLayerRef.current) {
         plotCountRef.current += 1;
         graphicsLayerRef.current.removeAll(); // Clear existing layers
-
-        const speciesAStyle = "circle";
-        const speciesBStyle = "triangle";
         
         Object.entries(dataColors).forEach(([key, colors]) => {
-          // Plot species A data
-          if (datasetsToShow[key] && currSites[key]) {
-            const layer = createSiteFeatureLayer(Graphic, FeatureLayer, currSites[key], colors, speciesAStyle, key);
-            graphicsLayerRef.current.add(layer);
-          }
-          // Plot species B data
-          if (datasetsToShow[key] && currSitesB[key]) {
-            const layer = createSiteFeatureLayer(Graphic, FeatureLayer, currSitesB[key], colors, speciesBStyle, key);
-            graphicsLayerRef.current.add(layer);
+          const speciesConfigs = [
+            { sites: currSites[key], style: "circle" },
+            { sites: currSitesB[key], style: "triangle" }
+          ];
+
+          if (datasetsToShow[key]) {
+            speciesConfigs.forEach(({ sites, style }) => {
+              if (sites) {
+                const layer = createSiteFeatureLayer(
+                  Graphic, 
+                  FeatureLayer, 
+                  sites, 
+                  colors, 
+                  style, 
+                );
+                graphicsLayerRef.current.add(layer);
+              }
+            });
           }
         });
       }

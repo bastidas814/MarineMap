@@ -193,7 +193,7 @@ export default function SpeciesSection() {
               allYearSiteData[year]
                 ? allYearSiteData[year].push(formattedRecord)
                 : (allYearSiteData[year] = [formattedRecord]);
-              allYearSiteData["all years"].push(formattedRecord);
+              // allYearSiteData["all years"].push(formattedRecord);
             }
             else {
               console.log(
@@ -685,36 +685,36 @@ export default function SpeciesSection() {
 
     setCurrYearDetail(newCurrYearDetail);
 
-    const tempCurrYearSiteData = {};
-    const tempCurrYearSiteDataB = {};
-    if (newYear in allYearRasData) {
-      tempCurrYearSiteData["rasSites"] = allYearRasData[newYear];
-    }
+    const sets = [
+      { 
+        target: {}, 
+        ras: allYearRasData, 
+        nemesis: allYearNemesisSiteData, 
+        obis: allYearObisSiteData },
+      { 
+        target: {}, 
+        ras: allYearRasDataB, 
+        nemesis: allYearNemesisSiteDataB, 
+        obis: allYearObisSiteDataB 
+      }
+    ];
 
-    if (newYear in allYearRasDataB) {
-      tempCurrYearSiteDataB["rasSites"] = allYearRasDataB[newYear];
-    }
+    sets.forEach(set => {
+      if (newYear in set.ras) {
+        set.target["rasSites"] = set.ras[newYear];
+      }
 
-    if (newYear in allYearNemesisSiteData) {
-      tempCurrYearSiteData["nemesisSpecificSites"] =
-        allYearNemesisSiteData[newYear];
-    }
+      if (newYear in set.nemesis) {
+        set.target["nemesisSpecificSites"] = set.nemesis[newYear];
+      }
 
-    if (newYear in allYearNemesisSiteDataB) {
-      tempCurrYearSiteDataB["nemesisSpecificSites"] =
-        allYearNemesisSiteDataB[newYear];
-    }
+      if (set.obis && newYear in set.obis) {
+        set.target["obisSites"] = set.obis[newYear];
+      }
+    });
 
-    if (allYearObisSiteData && newYear in allYearObisSiteData) {
-      tempCurrYearSiteData["obisSites"] = allYearObisSiteData[newYear];
-    }
-
-    if (allYearObisSiteDataB && newYear in allYearObisSiteDataB) {
-      tempCurrYearSiteDataB["obisSites"] = allYearObisSiteDataB[newYear];
-    }
-
-    setCurrYearSiteData(tempCurrYearSiteData);
-    setCurrYearSiteDataB(tempCurrYearSiteDataB);
+    setCurrYearSiteData(sets[0].target);
+    setCurrYearSiteDataB(sets[1].target);
 
     if (newYear == "all years") {
       setAllYears(true);
