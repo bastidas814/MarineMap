@@ -364,6 +364,37 @@ function Map({
               });
             });
           });
+          
+          view.popup.autoOpenEnabled = false;
+
+          view.on("click", (evt) => {
+            view.hitTest(evt).then((response) => {
+              const pointHit = response.results.find(
+                (r) => r.graphic && r.graphic.layer && r.graphic.layer !== geoJsonLayer
+              );
+
+              if (pointHit) {
+                view.popup.open({
+                  features: [pointHit.graphic],
+                  location: evt.mapPoint,
+                });
+                return;
+              }
+
+              const regionHit = response.results.find(
+                (r) => r.graphic && r.graphic.layer === geoJsonLayer
+              );
+              
+              if (regionHit) {
+                view.popup.open({
+                  features: [regionHit.graphic],
+                  location: evt.mapPoint,
+                });
+              } else {
+                view.popup.close();
+              }
+            });
+          });
 
           viewRef.current = view;
         }
@@ -520,7 +551,7 @@ function Map({
       outFields: ["*"],
       featureReduction: clusterOn ? {
         type: "cluster",
-        clusterRadius: "70px",
+        clusterRadius: "60px",
         clusterMinSize: "15px",
         clusterMaxSize: "50px",
         
@@ -575,7 +606,7 @@ function Map({
           type: "simple-marker",
           style: style,
           color: colors.fill,
-          size: 7,
+          size: 10,
           outline: { color: colors.outline, width: 1.5 },
         },
         visualVariables: [{
