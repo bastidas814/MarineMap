@@ -6,6 +6,8 @@ import Topbar from "./components/Topbar";
 import "./index.css";
 import Timeline from "./components/Timeline";
 import SpeciesSection from "./pages/SpeciesSection";
+import { useEffect, useState } from "react";
+import StartPage from "./components/StartPage";
 
 // Colors
 // primary
@@ -26,10 +28,20 @@ import SpeciesSection from "./pages/SpeciesSection";
 
 
 const App = () => {
+  const [showModal, setShowModal] = useState(true);
+
+  useEffect(() => {
+    setShowModal(true);
+  }, []);
+
   return (
     <div className="w-screen h-screen flex flex-col bg-base-100">
       {/* <Navbar /> */}
       {/* <Outlet /> */}
+      <StartPage 
+        isOpen={showModal} 
+        onClose={() => setShowModal(false)} 
+      />
       <div>
         <Topbar />
       </div>
