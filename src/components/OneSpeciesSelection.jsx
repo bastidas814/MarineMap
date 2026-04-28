@@ -166,7 +166,7 @@ function OneSpeciesSelection({
       {/* Sidebar for species info */}
       {showSpeciesDetail && selectedSpeciesInfo && (
         <div className="m-2 flex flex-col">
-          <h2 className="text-xl font-semibold">
+          <h2 className="text-xl font-semibold italic">
             {selectedSpeciesInfo["Species Name"]}
           </h2>
 

@@ -71,6 +71,7 @@ export function setLinks(speciesInfo, setNemesisLink, setWoRMSLink, onSpeciesSel
       }
       target="_blank"
       rel="noopener noreferrer"
+      className="hover:underline"
     >
       Nemesis page
     </a>
@@ -82,6 +83,7 @@ export function setLinks(speciesInfo, setNemesisLink, setWoRMSLink, onSpeciesSel
       }
       target="_blank"
       rel="noopener noreferrer"
+      className="hover:underline"
     >
       WoRMS page
     </a>
@@ -98,6 +100,9 @@ export function createSpeciesHeader(speciesInfo) {
 
   return (
     <>
+    <p className="text-sm">
+      {speciesInfo["Classification"]} species
+    </p>
     <p className="text-sm mt-2">
       {speciesInfo["Species Description"]}
     </p>
@@ -108,7 +113,7 @@ export function createSpeciesHeader(speciesInfo) {
     />
     <a className="text-xs">
       Image credit: <br></br>
-      <a className="text-primary"
+      <a className="text-primary hover:underline"
       href={speciesInfo["Species Img"]}
       target="_blank"
       rel="noopener noreferrer"

@@ -281,7 +281,7 @@ function MultipleSpeciesSelection({
         <div className="flex flex-col p-2 w-full">
           <div className="flex gap-x-2 flex-row w-full border- border-blue-200">
             <div className="border- flex flex-col w-1/2 p-2 border-primary">
-              <h2 className="text-sm font-semibold">
+              <h2 className="text-sm font-semibold italic">
                 {selectedSpeciesAInfo["Species Name"]}
               </h2>
               {createSpeciesHeader(selectedSpeciesAInfo)}
@@ -291,7 +291,7 @@ function MultipleSpeciesSelection({
             </div>
             <div className="bg-primary w-0.5"></div>
             <div className="flex flex-col w-1/2 p-2 border-">
-              <h2 className="text-sm font-semibold">
+              <h2 className="text-sm font-semibold italic">
                 {selectedSpeciesBInfo["Species Name"]}
               </h2>
               {createSpeciesHeader(selectedSpeciesBInfo)}
