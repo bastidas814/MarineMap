@@ -514,7 +514,7 @@ function Map({
         longitude: parseFloat(site.Longitude),
         latitude: parseFloat(site.Latitude),
       },
-      attributes: site,
+      attributes: { ...site, ObjectID: index + 1}
     }));
   
   const createFields = (sitesData) => {
