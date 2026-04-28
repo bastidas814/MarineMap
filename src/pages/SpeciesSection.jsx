@@ -635,9 +635,11 @@ export default function SpeciesSection() {
 
   // update newYear and SpeciesRegions
   useEffect(() => {
-    setNewYear(speciesYears[0]);
-    setSpeciesRegions(new Set(allYearRegionMap[speciesYears[0]]));
-  }, [speciesYears]);
+    if (newYear === null && speciesYears.length > 0) {
+      setNewYear(speciesYears[0]);
+      setSpeciesRegions(new Set(allYearRegionMap[speciesYears[0]]));
+    }
+  }, [speciesYears, newYear, allYearRegionMap]);
 
   // Depending on the selected year, update the pastSpeciesRegions and current speciesRegions
   useEffect(() => {
@@ -721,7 +723,15 @@ export default function SpeciesSection() {
       setCurrYearDetail(regionYearMap);
     } else setAllYears(false);
 
-  }, [newYear]);
+  }, [
+    newYear,
+    allYearObisSiteData,
+    allYearObisSiteDataB,
+    allYearNemesisSiteData,
+    allYearNemesisSiteDataB,
+    allYearRasData,
+    allYearRasDataB
+  ]);
 
 
   return (

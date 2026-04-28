@@ -94,8 +94,10 @@ function Timeline({ allowedYears, setNewYear }) {
   };
 
   useEffect(() => {
-    if (allYears) {
-      handlePlay;
+    if (allYears && window.playInterval) {
+      clearInterval(window.playInterval);
+      window.playInterval = null;
+      setIsPlaying(false);
     }
   }, [allYears]);
 
@@ -215,12 +217,17 @@ function Timeline({ allowedYears, setNewYear }) {
                 type="checkbox"
                 // defaultChecked
                 onChange={(e) => {
-                  if (e.target.checked) {
-                    setAllYears(true);
-                    setNewYear(["all years"]);
+                  const checked = e.target.checked;
+                  setAllYears(checked);
+                  if (checked) {
+                    if (window.playInterval) {
+                      clearInterval(window.playInterval);
+                      window.playInterval = null;
+                    }
+                    setIsPlaying(false);
+                    setNewYear("all years");
                   } else {
-                    setAllYears(false);
-                    setNewYear([rangeValue]); // Reset to range value when unchecked
+                    setNewYear(rangeValue);
                   }
                 }}
                 className="checkbox checkbox-xs"
