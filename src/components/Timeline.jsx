@@ -17,6 +17,7 @@ function Timeline({ allowedYears, setNewYear }) {
 
   useEffect(() => {
     setRangeValue(allowedYears[0]);
+    setNewYear(allowedYears[0]);
   }, [allowedYears]);
 
   // useEffect(() => {
