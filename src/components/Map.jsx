@@ -3,6 +3,7 @@ import { loadModules } from "esri-loader";
 import "../styles/mapStyle.css";
 import MapSettings from "./MapSettings";
 import { use } from "react";
+import { LAST_UPDATED, DATA_COLORS, REGION_COLORS, ESRI_CONFIG } from "../config/mapConfig";
 
 function Map({
   allYears = false,
@@ -15,8 +16,6 @@ function Map({
   expandSide = true,
   selectedTab,
 }) {
-  //TODO4 fix the popup for the first year region
-
   // make sure currRegions in a flat array
   currRegions = Array.isArray(currRegions[0]) ? currRegions[0] : currRegions;
   const MapElem = useRef(null);
@@ -25,39 +24,7 @@ function Map({
   const graphicsLayerRef = useRef(null);
   const plotCountRef = useRef(0);
   const [renderer, setRenderer] = useState(null);
-  const lastUpdated = "02/01/2026";
-
-  const dataColors = {
-    nemesisSpecificSites: { 
-      fill: "rgba(147,192,209,1)", 
-      outline: "rgba(30, 102, 129, 0.8)", 
-      label: "NEMESIS Sites" 
-    },
-    rasSites: { 
-      fill: "rgba(245,200,92,1)", 
-      outline: "rgba(120, 92, 25, 0.8)", 
-      label: "RAS Sites" 
-    },
-    obisSites: { 
-      fill: "rgba(121,209,168,1)", 
-      outline: "rgba(17, 105, 64, 0.8)", 
-      label: "OBIS Sites" 
-    },
-  };
-
-  const regionColors = {
-    currentRegions: { 
-      fill: "rgba(102,129,174, 0.5)", 
-      outlineColor: "rgb(102,129,174)", 
-      outline: "primary", 
-      label: "Current Regions"},
-    pastRegions: { 
-      fill: "rgba(147,192,209, 0.3)",
-      outlineColor: "rgb(147,192,209)",
-      outline: "primary", 
-      label: "Current + Past Regions"
-    },
-  }
+  
 
   const [datasetsToShow, setDatasetToShow] = useState({
     nemesisBioregions: true,
@@ -198,7 +165,7 @@ function Map({
 
   // Add the popups for each year
   useEffect(() => {
-    loadModules(["esri/PopupTemplate"], { url: "https://js.arcgis.com/4.25/" })
+    loadModules(["esri/PopupTemplate"], { url: ESRI_CONFIG.url })
       .then(([PopupTemplate]) => {
         if (geoJsonLayerRef.current) {
           geoJsonLayerRef.current.popupTemplate = createPopupTemplate(
@@ -233,7 +200,7 @@ function Map({
         "esri/renderers/UniqueValueRenderer",
         "esri/geometry/Extent"
       ],
-      { url: "https://js.arcgis.com/4.25/" }
+      { url: ESRI_CONFIG.url }
     )
       .then(
         ([
@@ -260,18 +227,13 @@ function Map({
           // });
 
           // limits map to some region in N. Am NE
-          const extent = new Extent({
-            ymin: 0,
-            xmin: -100,
-            xmax: -20,
-            ymax: 50,
-          });
+          const extent = new Extent(ESRI_CONFIG.extent);
 
           // initialize map zoom/position
           const view = new MapView({
             map: webmap,
-            zoom: 4,
-            center: [-65, 45],
+            zoom: ESRI_CONFIG.initialZoom,
+            center: ESRI_CONFIG.initialCenter,
             container: MapElem.current,
             // spatialReference: lambertConformalConic,
 
@@ -437,8 +399,8 @@ function Map({
               value: region,
               symbol: {
                 type: "simple-fill",
-                color: regionColors[config.id].fill,
-                outline: { color: regionColors[config.id].outlineColor, width: 1 },
+                color: REGION_COLORS[config.id].fill,
+                outline: { color: REGION_COLORS[config.id].outlineColor, width: 1 },
               },
             }))
           );
@@ -575,28 +537,28 @@ function Map({
             const layer = feature.graphic.layer;
             const count = feature.graphic.attributes.cluster_count;
 
-            const query = layer.createQuery();
-            const view = layer.view;
+            // const query = layer.createQuery();
+            // const view = layer.view;
 
-            query.geometry = feature.graphic.geometry;
+            // query.geometry = feature.graphic.geometry;
 
-            query.distance = view && view.resolution
-            ? query.distance = 70*view.resolution
-            : 50000;
-            query.units = "meters";
-            query.outFields = ["Date"];
-            query.returnGeometry = false;
-            return layer.queryFeatures(query).then((result) => {
-              const dates = result.features.map(f => f.attributes.Date);
-              const uniqueDates = [...new Set(dates)].sort((a, b) => a-b);
-              // const dateInfo = uniqueDates.length > 0 
-              //   ? `<p><strong>Dates:</strong><br>${uniqueDates.join('<br>')}</p>` 
-              //   : '';
-              const dateInfo = "";
-              return `<p><strong>${count} records</strong></p>
-              <span>Zoom in to see more.</span>
-              ${dateInfo}`;
-            });
+            // query.distance = view && view.resolution
+            // ? query.distance = 70*view.resolution
+            // : 50000;
+            // query.units = "meters";
+            // query.outFields = ["Date"];
+            // query.returnGeometry = false;
+            // return layer.queryFeatures(query).then((result) => {
+            //   // const dates = result.features.map(f => f.attributes.Date);
+            //   // const uniqueDates = [...new Set(dates)].sort((a, b) => a-b);
+            //   // const dateInfo = uniqueDates.length > 0 
+            //   //   ? `<p><strong>Dates:</strong><br>${uniqueDates.join('<br>')}</p>` 
+            //   //   : '';
+            //   const dateInfo = "";
+            return `<p><strong>${count} records</strong></p>
+            <span>Zoom in to see more.</span>`;
+              // ${dateInfo}`;
+            // });
           },
         },
       } : null,
@@ -626,14 +588,14 @@ function Map({
   useEffect(() => {
     loadModules(
       ["esri/Graphic", "esri/layers/FeatureLayer"], 
-      { url: "https://js.arcgis.com/4.25/" }
+      { url: ESRI_CONFIG.url }
     )
     .then(([Graphic, FeatureLayer]) => {
       if (graphicsLayerRef.current) {
         plotCountRef.current += 1;
         graphicsLayerRef.current.removeAll(); // Clear existing layers
         
-        Object.entries(dataColors).forEach(([key, colors]) => {
+        Object.entries(DATA_COLORS).forEach(([key, colors]) => {
           const speciesConfigs = [
             { sites: currSites[key], style: "circle" },
             { sites: currSitesB[key], style: "triangle" }
@@ -661,7 +623,7 @@ function Map({
 
   // Create a legend showing only datasetsToShow
   const Legend = ({ datasetsToShow }) => {
-    const legendItems = Object.entries({ ...regionColors, ...dataColors }).map(([key, colors]) => {
+    const legendItems = Object.entries({ ...REGION_COLORS, ...DATA_COLORS }).map(([key, colors]) => {
       return {
         key: key,
         color: colors.fill,
@@ -722,7 +684,7 @@ function Map({
         />
       </div>
       <div className={`absolute text-xs text-primary-content bottom-0 z-10 bg-none p-2 ${left_width()}`}>
-        Data last modified: {lastUpdated}
+        Data last modified: {LAST_UPDATED}
       </div>
 
       <div ref={MapElem} className="h-full"></div>
