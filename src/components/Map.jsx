@@ -18,6 +18,8 @@ function Map({
 }) {
   // make sure currRegions in a flat array
   currRegions = Array.isArray(currRegions[0]) ? currRegions[0] : currRegions;
+
+  // ref variables
   const MapElem = useRef(null);
   const viewRef = useRef(null);
   const zoomRef = useRef(null);
@@ -274,6 +276,7 @@ function Map({
             position: "top-right", // Positions the popup where you want
           };
 
+          // create geoJSON layer for bioregions
           const geoJsonLayer = new GeoJSONLayer({
             url: "/data/nemesisBioregions.geojson",
             outFields: ["*"],
@@ -290,9 +293,7 @@ function Map({
 
           geoJsonLayerRef.current = geoJsonLayer;
 
-          // const graphicsLayer = new GraphicsLayer();
-          // webmap.add(graphicsLayer);
-          // graphicsLayerRef.current = graphicsLayer;
+          // create Group Layer for points
           const groupLayer = new GroupLayer({ title: "Site data" });
           webmap.add(groupLayer);
           graphicsLayerRef.current = groupLayer;
@@ -335,12 +336,14 @@ function Map({
           
           view.popup.autoOpenEnabled = false;
 
+          // popup after click on point
           view.on("click", (evt) => {
             view.hitTest(evt).then((response) => {
+              // point popup
               const pointHit = response.results.find(
                 (r) => r.graphic && r.graphic.layer && r.graphic.layer !== geoJsonLayer
               );
-
+              
               if (pointHit) {
                 view.popup.open({
                   features: [pointHit.graphic],
@@ -349,6 +352,7 @@ function Map({
                 return;
               }
 
+              // region popup
               const regionHit = response.results.find(
                 (r) => r.graphic && r.graphic.layer === geoJsonLayer
               );
@@ -364,6 +368,7 @@ function Map({
             });
           });
 
+          // zoom buttons
           viewRef.current = view;
           const zoomWidget = new Zoom({ view });
           view.ui.add(zoomWidget, "bottom-left");
@@ -383,12 +388,14 @@ function Map({
     };
   }, [basemap]);
 
+  // get left pixel value based on sidebar width
   const getLeftPixel = () => {
     if (!expandSide) return 32; 
     if (selectedTab === "oneSpecies") return 240;
     return 414;
   };
 
+  // update zoom buttons when sidebar changes
   useEffect(() => {
     if (zoomRef.current) {
       zoomRef.current.container.style.left = `${getLeftPixel()}px`;
@@ -416,6 +423,7 @@ function Map({
           { id: "currentRegions", data: currRegions }
         ];
 
+        // include regions to be shown
         const uniqueValueInfos = regionConfigs
           .filter(config => datasetsToShow[config.id])
           .flatMap(config => 
@@ -447,9 +455,10 @@ function Map({
   // Adding specific sites to the map //
   //----------------------------------//
 
+  // create popup from site info
   const createSitePopupTemplate = (siteInfo) => {
     let content = `<p><strong>Record Date:</strong> ${siteInfo["Date"]}</p>`;
-    if (siteInfo["Site Code"]) {
+    if (siteInfo["Site Code"]) { // RAS Data
       content += `
       <p><strong>Site Name:</strong> ${siteInfo["Site Location"]}</p>
       <p><strong>City, State:</strong> ${siteInfo["City"]}, ${
@@ -460,7 +469,7 @@ function Map({
       ).toFixed(2)},
       ${parseFloat(siteInfo["Longitude"]).toFixed(2)})</p>
       `;
-    } else if (siteInfo["DatasetID"]) {
+    } else if (siteInfo["DatasetID"]) { // OBIS data
       content += `
       <p><strong>(Lat, Long)</strong>: (${parseFloat(
         siteInfo["Latitude"]
@@ -473,7 +482,7 @@ function Map({
         style="color: rgb(102,129,174);">
         Link to OBIS Dataset
       </a></p>`;
-    } else {
+    } else { // Nemesis data
       content += `
       <p><strong>Site Name:</strong> ${siteInfo["Site Location"]}</p>
       <p><strong>(Lat, Long)</strong>: (${parseFloat(
@@ -486,6 +495,7 @@ function Map({
     return { content: content };
    };
 
+  // cluster stops
   const makeStops = (max) => {
     const points = [1,2,5,10,50,100,300,500];
     return points.map(v => ({ 
@@ -493,6 +503,7 @@ function Map({
       size: 7 + Math.round(Math.sqrt(v/max) * 50) }));
   };
 
+  // create features from site data
   const createFeatures = (Graphic, sitesData) => 
     sitesData.map((site, index) => new Graphic({
       geometry: {
@@ -501,8 +512,9 @@ function Map({
         latitude: parseFloat(site.Latitude),
       },
       attributes: { ...site, ObjectID: index + 1}
-    }));
+  }));
   
+  // create the fields/type for a ArcGIS feature
   const createFields = (sitesData) => {
     const sampleSite = sitesData[0] || {};
     const additionalFields = Object.keys(sampleSite).map(
@@ -527,6 +539,7 @@ function Map({
     ];
   };
 
+  // function to create layer with site data
   const createSiteFeatureLayer = 
   (Graphic, FeatureLayer, sitesData, colors, style) => 
     new FeatureLayer({
@@ -604,6 +617,7 @@ function Map({
             { sites: currSitesB[key], style: "triangle" }
           ];
 
+          // add layer for each dataset
           if (datasetsToShow[key]) {
             speciesConfigs.forEach(({ sites, style }) => {
               if (sites) {
@@ -626,6 +640,7 @@ function Map({
 
   // Create a legend showing only datasetsToShow
   const Legend = ({ datasetsToShow }) => {
+    // list of data and region labels with colors
     const legendItems = Object.entries({ ...REGION_COLORS, ...DATA_COLORS }).map(([key, colors]) => {
       return {
         key: key,
@@ -635,6 +650,7 @@ function Map({
       }
     });
 
+    // filter to only datasets that are currently shown
     const itemsToShow = legendItems.filter(({ key }) => datasetsToShow[key]);
 
     if (itemsToShow.length === 0) {
@@ -650,6 +666,7 @@ function Map({
     return (
       <div className="absolute top-4 right-4 bg-base-100 p-2 rounded shadow outline outline-primary">
         <h4 className="text-sm font-bold mb-2">Legend:</h4>
+
         {itemsToShow // Only render items with true value in datasetsToShow
           .map(({ color, border, label }, index) => (
             <div className="flex items-center" key={index}>
@@ -668,6 +685,8 @@ function Map({
 
   return (
     <div className="h-full w-full bg-base-100 relative">
+
+      {/* Settings button */}
       <div 
         className={`absolute top-0 z-10 bg-none p-2`}
         style={{left: `${getLeftPixel()}px`}}
@@ -681,6 +700,8 @@ function Map({
           clusterOn={clusterOn}
         />
       </div>
+
+      {/* Text for data last modified */}
       <div
         className="absolute text-xs text-primary-content bottom-0 z-10 bg-none p-2"
         style={{ left: `${getLeftPixel() + 55}px` }}
@@ -688,7 +709,10 @@ function Map({
         Data last modified: {LAST_UPDATED}
       </div>
 
+      {/* Map with data */}
       <div ref={MapElem} className="h-full"></div>
+
+      {/* Legend */}
       <Legend datasetsToShow={datasetsToShow} />
     </div>
   );
