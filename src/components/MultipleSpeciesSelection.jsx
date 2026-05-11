@@ -229,7 +229,7 @@ function MultipleSpeciesSelection({
         <div className="m-2 flex flex-col">
           <div className="flex gap-x-2">
             <div className="flex flex-col w-1/2 p-2 border-">
-              <div className="text-sm">Select species 1 (circle):</div>
+              <div className="text-sm">Select species 1 (circle)</div>
               <select
                 className="select focus:outline-none outline-none select-xs w-full select-secondary rounded-md text-xs"
                 onChange={handleSpeciesAChange}
@@ -248,7 +248,7 @@ function MultipleSpeciesSelection({
               </select>
             </div>
             <div className="flex flex-col w-1/2 p-2 border-">
-              <div className="text-sm">Select species 2 (triangle):</div>
+              <div className="text-sm">Select species 2 (triangle)</div>
               <select
                 className="select focus:outline-none outline-none select-xs w-full select-secondary rounded-md text-xs"
                 onChange={handleSpeciesBChange}
