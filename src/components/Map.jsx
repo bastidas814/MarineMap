@@ -20,6 +20,7 @@ function Map({
   currRegions = Array.isArray(currRegions[0]) ? currRegions[0] : currRegions;
   const MapElem = useRef(null);
   const viewRef = useRef(null);
+  const zoomRef = useRef(null);
   const geoJsonLayerRef = useRef(null);
   const graphicsLayerRef = useRef(null);
   const plotCountRef = useRef(0);
@@ -165,7 +166,7 @@ function Map({
 
   // Add the popups for each year
   useEffect(() => {
-    loadModules(["esri/PopupTemplate"], { url: ESRI_CONFIG.url })
+    loadModules(["esri/PopupTemplate"], { url: ESRI_CONFIG.url, css: true })
       .then(([PopupTemplate]) => {
         if (geoJsonLayerRef.current) {
           geoJsonLayerRef.current.popupTemplate = createPopupTemplate(
@@ -198,7 +199,8 @@ function Map({
         "esri/layers/GroupLayer",
         "esri/PopupTemplate",
         "esri/renderers/UniqueValueRenderer",
-        "esri/geometry/Extent"
+        "esri/geometry/Extent",
+        "esri/widgets/Zoom"
       ],
       { url: ESRI_CONFIG.url }
     )
@@ -211,6 +213,7 @@ function Map({
           PopupTemplate,
           UniqueValueRenderer,
           Extent,
+          Zoom
         ]) => {
           // Adding styles for the popup
           // const style = document.createElement("style");
@@ -235,6 +238,9 @@ function Map({
             zoom: ESRI_CONFIG.initialZoom,
             center: ESRI_CONFIG.initialCenter,
             container: MapElem.current,
+            ui: {
+              components: []
+            },
             // spatialReference: lambertConformalConic,
 
             // prevent zoom from going too far or too close
@@ -359,6 +365,12 @@ function Map({
           });
 
           viewRef.current = view;
+          const zoomWidget = new Zoom({ view });
+          view.ui.add(zoomWidget, "bottom-left");
+          zoomWidget.container.style.position = "absolute";
+          zoomWidget.container.style.left = `${getLeftPixel()}px`;
+          zoomWidget.container.style.zIndex = "1001";
+          zoomRef.current = zoomWidget; 
         }
       )
       .catch((err) => console.error("Error loading ESRI modules:", err));
@@ -370,6 +382,18 @@ function Map({
       }
     };
   }, [basemap]);
+
+  const getLeftPixel = () => {
+    if (!expandSide) return 32; 
+    if (selectedTab === "oneSpecies") return 240;
+    return 414;
+  };
+
+  useEffect(() => {
+    if (zoomRef.current) {
+      zoomRef.current.container.style.left = `${getLeftPixel()}px`;
+    }
+  }, [expandSide, selectedTab]);
 
   // Update map with currRegions and pastRegions
   useEffect(() => {
@@ -536,29 +560,8 @@ function Map({
           content: (feature) => {
             const layer = feature.graphic.layer;
             const count = feature.graphic.attributes.cluster_count;
-
-            // const query = layer.createQuery();
-            // const view = layer.view;
-
-            // query.geometry = feature.graphic.geometry;
-
-            // query.distance = view && view.resolution
-            // ? query.distance = 70*view.resolution
-            // : 50000;
-            // query.units = "meters";
-            // query.outFields = ["Date"];
-            // query.returnGeometry = false;
-            // return layer.queryFeatures(query).then((result) => {
-            //   // const dates = result.features.map(f => f.attributes.Date);
-            //   // const uniqueDates = [...new Set(dates)].sort((a, b) => a-b);
-            //   // const dateInfo = uniqueDates.length > 0 
-            //   //   ? `<p><strong>Dates:</strong><br>${uniqueDates.join('<br>')}</p>` 
-            //   //   : '';
-            //   const dateInfo = "";
             return `<p><strong>${count} records</strong></p>
             <span>Zoom in to see more.</span>`;
-              // ${dateInfo}`;
-            // });
           },
         },
       } : null,
@@ -661,19 +664,14 @@ function Map({
     );
   };
 
-  const left_width = () => {
-    if (!expandSide) {
-      return 'left-8';
-    }
-    if (selectedTab == "oneSpecies"){
-      return 'left-60';
-    }
-    return 'left-[414px]';
-  }
+  
 
   return (
     <div className="h-full w-full bg-base-100 relative">
-      <div className={`absolute top-0 z-10 bg-none p-2 ${left_width()}`}>
+      <div 
+        className={`absolute top-0 z-10 bg-none p-2`}
+        style={{left: `${getLeftPixel()}px`}}
+      >
         <MapSettings
           setDatasetToShow={setDatasetToShow}
           datasetsToShow={datasetsToShow}
@@ -683,7 +681,10 @@ function Map({
           clusterOn={clusterOn}
         />
       </div>
-      <div className={`absolute text-xs text-primary-content bottom-0 z-10 bg-none p-2 ${left_width()}`}>
+      <div
+        className="absolute text-xs text-primary-content bottom-0 z-10 bg-none p-2"
+        style={{ left: `${getLeftPixel() + 55}px` }}
+      >
         Data last modified: {LAST_UPDATED}
       </div>
 
